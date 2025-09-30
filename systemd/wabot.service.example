@@ -1,0 +1,94 @@
+[Unit]
+Description=WhatsApp Bot Service
+After=network.target redis-server.service unoconv-listener.service
+Requires=redis-server.service unoconv-listener.service
+
+[Service]
+Type=simple
+User=your_user
+Group=your_group
+WorkingDirectory=/path/to/your/whatsapp-bot
+
+# Load NVM and start application
+ExecStart=/bin/bash -c 'cd /path/to/your/whatsapp-bot && . /home/your_user/.nvm/nvm.sh && exec node index.js'
+
+# Environment settings
+Environment=HOME=/home/your_user
+Environment=NODE_VERSION=<your_node_version>
+Environment=NVM_DIR=/home/your_user/.nvm
+Environment=PATH=/home/your_user/.nvm/versions/node/v<your_node_version>/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/libreoffice/program
+Environment=DISPLAY=:0
+
+# Redis settings
+Environment=REDIS_HOST=localhost
+Environment=REDIS_PORT=6379
+Environment=REDIS_PASSWORD=your_redis_password
+
+# Fallback settings
+Environment=REDIS_QUEUE_MAX_LENGTH=1000
+Environment=REDIS_RATE_LIMIT_THRESHOLD=80
+Environment=REDIS_SESSION_BACKUP_INTERVAL=300
+Environment=REDIS_CACHE_TTL=3600
+
+# Resource Control
+MemoryHigh=400M
+MemoryMax=512M
+
+# Restart settings
+Restart=always
+RestartSec=20 # Increased from 10
+StartLimitInterval=200
+StartLimitBurst=5
+
+# Redis dependency check
+ExecStartPre=/bin/bash -c 'while ! timeout 1 bash -c "echo > /dev/tcp/$REDIS_HOST/6379"; do sleep 1; done'
+Environment=XAUTHORITY=/home/your_user/.Xauthority
+
+# Unoconv related environment
+Environment=UNO_PATH=/usr/lib/libreoffice/program
+Environment=LD_LIBRARY_PATH=/usr/lib/libreoffice/program
+Environment=SAL_USE_VCLPLUGIN=gen
+Environment=LC_ALL=en_US.UTF-8
+
+# Allow the service to access X11 display
+RuntimeDirectory=wabot
+RuntimeDirectoryMode=0755
+
+# Logging
+StandardOutput=append:/path/to/your/whatsapp-bot/logs/wabot.log
+StandardError=append:/path/to/your/whatsapp-bot/logs/wabot-error.log
+
+# Restart and timeout configuration
+Restart=always
+RestartSec=10
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=no
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+
+# Directory access configuration
+UMask=0022
+ReadWriteDirectories=/path/to/your/whatsapp-bot
+DeviceAllow=/dev/chromium-browser rw
+
+# Puppeteer/Chrome configuration
+Environment=PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
+Environment=PUPPETEER_EXECUTABLE_PATH=/path/to/your/whatsapp-bot/node_modules/puppeteer-core/.local-chromium/linux-1045629/chrome-linux/chrome
+
+# Allow write access to specific directories
+ReadWritePaths=/path/to/your/whatsapp-bot/logs
+ReadWritePaths=/path/to/your/whatsapp-bot/.wwebjs_auth
+ReadWritePaths=/path/to/your/whatsapp-bot/.wwebjs_cache
+ReadWritePaths=/path/to/your/whatsapp-bot/sessions
+ReadWritePaths=/path/to/your/whatsapp-bot/temp
+ReadWritePaths=/path/to/your/whatsapp-bot/docs
+
+[Install]
+WantedBy=multi-user.target

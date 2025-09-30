@@ -1,0 +1,153 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+debug.log
+
+# WhatsApp Web.js files and sessions
+.redis-fallback
+.wwebjs_auth/
+.wwebjs_cache/
+sessions/
+sessions.json
+*.session.json
+backup-*.json
+
+# Environment and Configuration Files
+## Environment Variables
+.env
+.env.*
+!.env.example
+!.env.telegram
+
+## Environment Backups
+.env.backup
+.env.*.backup
+.env.production
+.env.local
+.env.development
+.env.test
+
+# Log files
+logs/
+*.log
+
+# Data and cache
+data/
+data/*
+!data/.gitkeep
+!data/blacklist.json
+!src/data/credentials/example/
+!src/data/credentials/example/*.example.json
+cache/
+*.cache
+
+# JSON data files
+**/src/data/static/*.json
+**/autoreply.json
+**/welcome.json
+
+# Memory and history files
+memoryAI/
+memoryAI/*
+!memoryAI/.gitkeep
+**/chathistory.json
+
+# Test files
+coverage/
+__tests__/
+*.test.js.snap
+.nyc_output/
+
+# Temporary files
+temp/
+temp/*
+tmp/
+*.tmp
+*.temp
+downloads/
+uploads/
+media/
+stickers/
+documents/
+images/
+videos/
+audio/
+
+# Editor and IDE files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+.history/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Authentication and Credentials
+## Google Drive
+credentials.json
+token.json
+**/credentials/*.json
+!**/credentials/example/**
+**/tokens/*.json
+**/*.credentials.json
+**/*.token.json
+
+# Allow example files
+!**/example/credentials.example.json
+!**/example/token.example.json
+
+## Bot Configuration
+config.json
+auth.json
+tokens.json
+*.auth.json
+**/auth/*.json
+**/*.secret.json
+
+## Session Files
+whatsapp-session*
+.sessions/
+*.session.json
+*.qr.png
+session.data.json
+
+## API Keys and Tokens
+**/*.api-key
+**/*.secret-key
+api-keys.json
+secret-keys.json
+.secret/
+
+# Build and distribution
+dist/
+build/
+release/
+
+# Systemd service files
+systemd/*.service
+!systemd/*.service.example
+systemd/systemdBackup/

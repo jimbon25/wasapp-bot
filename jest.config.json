@@ -1,0 +1,10 @@
+{
+  "transform": {
+    "^.+\\.js$": "babel-jest"
+  },
+  "testEnvironment": "node",
+  "extensionsToTreatAsEsm": [".js", ".mjs"],
+  "transformIgnorePatterns": [
+    "node_modules/(?!(whatsapp-web.js|qrcode-terminal|variables)/.*)"
+  ]
+}

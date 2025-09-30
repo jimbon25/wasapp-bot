@@ -1,0 +1,46 @@
+[Unit]
+Description=Unoconv Listener Service
+After=network.target
+
+[Service]
+Type=simple
+User=your_user
+Group=your_group
+
+# Environment configuration
+Environment=PATH=/usr/bin:/usr/local/bin:/usr/lib/libreoffice/program
+Environment=HOME=/home/your_user
+Environment=UNO_PATH=/usr/lib/libreoffice/program
+Environment=LD_LIBRARY_PATH=/usr/lib/libreoffice/program
+Environment=DISPLAY=:0
+Environment=SAL_USE_VCLPLUGIN=gen
+Environment=LC_ALL=en_US.UTF-8
+Environment=LO_JAVA_OPTIONS=-Xmx512m
+
+# Resource limits
+MemoryLimit=1G
+LimitNOFILE=4096
+
+# Service execution
+ExecStartPre=/usr/bin/fc-cache -f
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/bin/unoconv --listener --timeout=300
+
+# Restart configuration
+# Resource Control (Optimized)
+MemoryHigh=750M
+MemoryMax=900M
+CPUWeight=50
+IOWeight=50
+
+# Restart configuration
+Restart=on-failure # Only restart if it crashes, not on normal timeout exit
+RestartSec=10
+
+# Timeout settings
+TimeoutStartSec=300
+TimeoutStopSec=300
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
