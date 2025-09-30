@@ -163,7 +163,7 @@ Berikut adalah daftar perintah utama yang tersedia. Untuk daftar lengkap dan ban
 |                    | `/gdrive done`                        | Mengakhiri sesi upload Google Drive.                                   |
 | **Moderasi Grup**  | `/kick [@user/reply]`                 | Mengeluarkan anggota dari grup.                                        |
 |                    | `/add [nomor]`                        | Menambahkan anggota ke grup.                                           |
-|                    | `/addreply [kunci] | [balasan]`       | Menambah atau memperbarui aturan auto-reply.                           |
+|                    | `/addreply [kunci] [balasan]`         | Menambah atau memperbarui aturan auto-reply.                           |
 |                    | `/delreply [kunci]`                   | Menghapus aturan auto-reply.                                           |
 |                    | `/listreply`                          | Melihat semua aturan auto-reply.                                       |
 |                    | `/setwelcome [pesan]`                 | Mengatur pesan selamat datang untuk grup.                              |

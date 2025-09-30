@@ -3,8 +3,11 @@
 src/data/credentials/*.json
 !src/data/credentials/example/
 !src/data/credentials/example/*.example.json
-!src/data/static/
-src/data/static/*.json
+
+# Static files configuration
+/src/data/static/*.json          # Mengabaikan file JSON di static
+!/src/data/static/example/       # Tidak mengabaikan folder example
+!/src/data/static/example/*.json # Tidak mengabaikan file JSON di example
 !src/data/constants/
 # Environment variables
 .env
@@ -52,19 +55,15 @@ logs/
 *.log
 
 # Data and cache
-data/
-data/*
-!data/.gitkeep
-!data/blacklist.json
-!src/data/credentials/example/
-!src/data/credentials/example/*.example.json
+/data/                        # Hanya ignore folder data di root
+/data/*                      # Hanya ignore konten folder data di root
+!/data/.gitkeep             # Kecuali .gitkeep di root data
+!/src/data/                 # Tidak ignore folder src/data
+!/src/data/static/          # Tidak ignore folder static
+!/src/data/constants/       # Tidak ignore folder constants
+!/src/data/credentials/     # Tidak ignore folder credentials
 cache/
 *.cache
-
-# JSON data files
-**/src/data/static/*.json
-**/autoreply.json
-**/welcome.json
 
 # Memory and history files
 memoryAI/
