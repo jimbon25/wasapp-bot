@@ -1,8 +1,10 @@
+# Ignore all JSON files in static except sources.json
+static/*.json
+!static/sources.json
 
-# Data folder - exclude sensitive files but include examples and static files
-src/data/credentials/*.json
-!src/data/credentials/example/
-!src/data/credentials/example/*.example.json
-!src/data/static/
-!src/data/static/*.json
-!src/data/constants/
+# Ignore actual credentials
+credentials/*.json
+!credentials/example/*.example.json
+
+# Keep .gitkeep files
+!.gitkeep

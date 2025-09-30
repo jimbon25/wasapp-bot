@@ -1,0 +1,83 @@
+{
+  "kdrama_platforms": {
+    "drakorkita": {
+      "name": "Film",
+      "emoji": "🎭",
+      "base_url": "https://drakor.kita.mobi",
+      "patterns": {
+        "home": "https://drakor.kita.mobi",
+        "search": "https://drakor.kita.mobi/all?q={query}",
+        "watch": "https://drakor.kita.mobi/detail/{id}"
+      },
+      "examples": {
+        "search": "https://drakor.kita.mobi/all?q=godzilla",
+        "watch": "https://drakor.kita.mobi/detail/godzilla-x-kong-the-new-empire-2024-iv9l"
+      },
+      "features": {
+        "requires_exact_title": false,
+        "supports_movies": true,
+        "supports_series": true,
+        "content_type": "kdrama"
+      }
+    }
+  },
+  "unofficial_platforms": {
+    "animeindo": {
+      "name": "Link 1",
+      "emoji": "➤",
+      "base_url": "https://anime-indo.lol",
+      "patterns": {
+        "home": "https://anime-indo.lol/",
+        "search": "https://anime-indo.lol/search/{query}/",
+        "watch": "https://anime-indo.lol/anime/{id}/"
+      },
+      "examples": {
+        "search": "https://anime-indo.lol/search/kimetsu-no-yaiba/",
+        "watch": "https://anime-indo.lol/anime/kimetsu-no-yaiba-yuukaku-hen/"
+      },
+      "features": {
+        "requires_exact_title": true,
+        "supports_movies": true,
+        "supports_seasons": true
+      }
+    },
+    "nontonanimeid": {
+      "name": "Link 2",
+      "emoji": "➤",
+      "base_url": "https://s7.nontonanimeid.boats",
+      "patterns": {
+        "home": "https://s7.nontonanimeid.boats/",
+        "search": "https://s7.nontonanimeid.boats/?s={query}",
+        "watch": "https://s7.nontonanimeid.boats/anime/{id}/"
+      },
+      "examples": {
+        "search": "https://s7.nontonanimeid.boats/?s=attack+on+titan",
+        "watch": "https://s7.nontonanimeid.boats/anime/shingeki-kyojin-chuugakkou/"
+      },
+      "features": {
+        "requires_exact_title": false,
+        "supports_movies": true,
+        "supports_seasons": true
+      }
+    },
+    "otakudesu": {
+      "name": "Link 3",
+      "emoji": "➤",
+      "base_url": "https://otakudesu.best",
+      "patterns": {
+        "home": "https://otakudesu.best/",
+        "search": "https://otakudesu.best/?s={query}&post_type=anime",
+        "watch": "https://otakudesu.best/anime/{id}/"
+      },
+      "examples": {
+        "search": "https://otakudesu.best/?s=attack+on+titan&post_type=anime",
+        "watch": "https://otakudesu.best/anime/snk-final-part2-sub-indo/"
+      },
+      "features": {
+        "requires_exact_title": false,
+        "supports_movies": true,
+        "supports_seasons": true
+      }
+    }
+  }
+}
