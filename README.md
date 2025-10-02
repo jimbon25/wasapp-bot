@@ -178,14 +178,12 @@ Berikut adalah daftar perintah utama yang tersedia. Untuk daftar lengkap dan ban
 ## Dokumentasi Lengkap
 
 Untuk informasi lebih detail mengenai setiap aspek bot, silakan kunjungi dokumen-dokumen berikut:
--   [**Environment Configuration**](docs/DOKUMENTASI_LENGKAP.md#33-konfigurasi-environment-env): Penjelasan lengkap semua variabel lingkungan.
--   [**Fitur Bot**](docs/DOKUMENTASI_LENGKAP.md#2-fitur-utama): Deskripsi mendalam tentang setiap fitur bot.
--   [**Manajemen Auto-Reply**](docs/DOKUMENTASI_LENGKAP.md#4-referensi-perintah): Panduan lengkap untuk mengelola fitur auto-reply.
--   [**Integrasi Google Drive**](docs/DOKUMENTASI_LENGKAP.md#google-drive): Panduan konfigurasi dan penggunaan fitur Google Drive.
--   [**Integrasi Redis**](docs/DOKUMENTASI_LENGKAP.md#51-integrasi-redis): Detail tentang penggunaan dan konfigurasi Redis.
--   [**Redis Keys**](docs/REDIS_KEYS.md): Daftar semua key Redis yang digunakan bot.
--   [**Panduan Keamanan**](docs/DOKUMENTASI_LENGKAP.md#52-panduan-keamanan): Praktik terbaik dan konfigurasi keamanan.
--   [**Panduan Instalasi Windows 11**](docs/DOKUMENTASI_LENGKAP.md#342-windows-11): Panduan lengkap untuk instalasi dan deployment di Windows 11.
+
+-   [**Panduan Integrasi Google Drive**](./docs/GOOGLE_DRIVE.md): Konfigurasi dan penggunaan fitur Google Drive dari A-Z.
+-   [**Panduan Fitur Instagram Downloader**](./docs/INSTAGRAM.md): Konfigurasi dan cara kerja fitur download Instagram.
+-   [**Panduan Fitur Auto-Reply**](./docs/AUTOREPLY.md): Panduan lengkap untuk mengelola fitur auto-reply.
+-   [**Dokumentasi Lengkap (Utama)**](./docs/DOKUMENTASI_LENGKAP.md): Penjelasan semua fitur, instalasi, dan perintah.
+-   [**Daftar Kunci Redis**](./docs/REDIS_KEYS.md): Referensi teknis semua key Redis yang digunakan bot.
 
 ## Catatan Keamanan Fitur Teks Panjang
 
