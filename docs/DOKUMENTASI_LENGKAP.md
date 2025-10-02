@@ -7,6 +7,7 @@ Untuk panduan yang lebih spesifik mengenai fitur-fitur utama, silakan lihat:
 - **[Panduan Integrasi Google Drive](./GOOGLE_DRIVE.md)**
 - **[Panduan Fitur Instagram Downloader](./INSTAGRAM.md)**
 - **[Panduan Fitur Auto-Reply](./AUTOREPLY.md)**
+- **[Panduan Konfigurasi Redis](./REDIS.md)**
 - **[Daftar Kunci Redis (Teknis)](./REDIS_KEYS.md)**
 
 ## Daftar Isi
