@@ -9,22 +9,22 @@ export default {
     
     async handleMediaMessage(message) {
         try {
-            const userId = message.from;
+            const userId = message.author || message.from;
             const session = await uploadSessionService.getSession(userId);
-            
+
             if (!session) return false;
-            
-            await message.reply(`📤 Mengupload ke folder "${session.folderName}"...`);
-            
+
+            await message.react('📤');
+
             const fileManager = new FileManager();
             const downloadedMedia = await message.downloadMedia();
             const tempFilePath = await fileManager.saveMedia(downloadedMedia);
-            
+
             const mimeType = downloadedMedia.mimetype;
-            
+
             const fileExt = fileManager.getExtensionFromMimeType(mimeType);
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-            
+
             let fileName;
             if (message.type === 'document') {
                 fileName = downloadedMedia.filename || message.mediaData?.fileName || `document_${timestamp}${fileExt}`;
@@ -37,7 +37,7 @@ export default {
             } else {
                 fileName = `media_${timestamp}${fileExt}`;
             }
-            
+
             logger.info('Upload Info:', {
                 messageType: message.type,
                 mimeType: mimeType,
@@ -45,13 +45,14 @@ export default {
                 mediaFilename: downloadedMedia.filename,
                 mediaDataFilename: message.mediaData?.fileName
             });
-            
+
             try {
                 await googleDriveService.uploadFile(tempFilePath, fileName, session.folderId, mimeType);
                 await uploadSessionService.updateSession(userId);
-                await message.reply('✅ File berhasil diupload ke folder!');
+                await message.react('✅');
                 return true;
             } catch (error) {
+                await message.react('❌');
                 if (error.message.includes('rate limit')) {
                     await message.reply('⚠️ Google Drive API rate limit terlampaui. Mohon coba lagi nanti.');
                 } else {
@@ -69,6 +70,7 @@ export default {
                 }
             }
         } catch (error) {
+            await message.react('❌');
             logger.error('Error handling media message:', error);
             return false;
         }
@@ -76,7 +78,7 @@ export default {
 
     async execute(message, args) {
         try {
-            const userId = message.from;
+            const userId = message.author || message.from;
 
             if (args[0] === 'done') {
                 const hasSession = await uploadSessionService.hasActiveSession(userId);
