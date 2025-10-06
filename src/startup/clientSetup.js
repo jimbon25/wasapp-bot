@@ -2,7 +2,7 @@ import qrcode from 'qrcode-terminal';
 import logger from '../utils/common/logger.js';
 import { redisManager } from '../utils/redis/index.js';
 import { autoReplyManager } from '../features/autoreply.js';
-import moderationService from '../services/moderationService.js'; // Added import
+import moderationService from '../services/moderationService.js';
 
 /**
  * Sets up event listeners for the WhatsApp client.
@@ -63,6 +63,7 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
                             const handled = await gdriveCommand.handleMediaMessage?.(message);
                             if (handled) return;
                         }
+
                     }
 
                     if (message.body.startsWith('/')) {
@@ -110,9 +111,7 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
                     .map(id => `@${id.split('@')[0]}`)
                     .join(', ');
 
-                await chat.sendMessage(`Selamat datang ${newMembers}!
-
-${welcomeMessage}`);
+                await chat.sendMessage(`Selamat datang ${newMembers}!\n\n${welcomeMessage}`);
                 logger.info(`Sent welcome message to ${newMembers} in group ${chat.name} (${groupId})`);
             }
         } catch (error) {

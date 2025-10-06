@@ -97,7 +97,7 @@ Pastikan perangkat lunak berikut telah terinstal di sistem Anda:
 -   **Git**
 -   **Redis Server**
 -   **yt-dlp** dan **FFmpeg** (untuk fitur download media)
--   **unoconv** & **LibreOffice** (untuk fitur konversi dokumen ke PDF)
+-   **unoconv & LibreOffice** (untuk fitur konversi dokumen ke PDF)
 
 ### 3.2. Instalasi Proyek
 1.  **Clone Repository**:

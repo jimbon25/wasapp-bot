@@ -36,6 +36,12 @@ const config = {
     },
   },
 
+  mega: {
+    email: process.env.MEGA_EMAIL,
+    password: process.env.MEGA_PASSWORD,
+    uploadFolder: process.env.MEGA_UPLOAD_FOLDER || '/Root/WabotUploads/',
+  },
+
   system: {
     memory: {
       filePath: process.env.MEMORY_FILE_PATH || 'memoryAI/chathistory.json',
