@@ -60,10 +60,15 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
                     if (message.hasMedia) {
                         const gdriveCommand = commandHandler.commands.get('gdrive');
                         if (gdriveCommand) {
-                            const handled = await gdriveCommand.handleMediaMessage?.(message);
-                            if (handled) return;
+                            const gdriveHandled = await gdriveCommand.handleMediaMessage?.(message);
+                            if (gdriveHandled) return;
                         }
 
+                        const megaCommand = commandHandler.commands.get('mega');
+                        if (megaCommand) {
+                            const megaHandled = await megaCommand.handleMediaMessage?.(message);
+                            if (megaHandled) return;
+                        }
                     }
 
                     if (message.body.startsWith('/')) {

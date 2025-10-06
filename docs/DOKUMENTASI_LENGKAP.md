@@ -5,6 +5,7 @@ Dokumen ini adalah panduan terpusat yang mencakup semua aspek dari WhatsApp Bot,
 ## Dokumentasi Terkait
 Untuk panduan yang lebih spesifik mengenai fitur-fitur utama, silakan lihat:
 - **[Panduan Integrasi Google Drive](./GOOGLE_DRIVE.md)**
+- **[Panduan Fitur Mega.nz Uploader](./MEGA.md)**
 - **[Panduan Fitur Instagram Downloader](./INSTAGRAM.md)**
 - **[Panduan Fitur Auto-Reply](./AUTOREPLY.md)**
 - **[Panduan Konfigurasi Redis](./REDIS.md)**
@@ -59,11 +60,10 @@ Bot WhatsApp multifungsi dengan fitur AI chat (Gemini), Instagram downloader, tr
 - **PDF Generator**: Konversi teks (`/text2pdf`), gambar (`/topdf`), dan dokumen Word (`/word2pdf`) ke PDF.
 - **Formatting Profesional**: Output PDF diformat dengan template HTML untuk keterbacaan.
 
-### Integrasi Google Drive
+### Integrasi Cloud Storage
 
-- **Upload File**: Unggah file (foto, video, dokumen) ke Google Drive dengan `/gdrive`.
-- **Mode Single & Multi-upload**: Upload satu file atau mulai sesi untuk upload banyak file ke dalam satu folder.
-- **Manajemen Folder**: Buat, lihat riwayat, dan ganti nama folder Drive langsung dari bot.
+- **Google Drive**: Unggah file (foto, video, dokumen) ke Google Drive dengan `/gdrive`. Mendukung mode single & multi-upload serta manajemen folder.
+- **Mega.nz**: Unggah file ke folder default di Mega.nz dengan `/mega`. Mendukung mode upload tunggal dan sesi multi-upload.
 
 ### Informasi & Utilitas
 
@@ -137,6 +137,8 @@ Konfigurasi bot diatur melalui file `.env`.
 | `REMOVEBG_API_KEY` | Ya | API key untuk remove.bg |
 | `TELEGRAM_BOT_TOKEN` | Tidak | Token bot Telegram untuk notifikasi |
 | `TELEGRAM_CHAT_ID` | Tidak | ID chat Telegram untuk notifikasi |
+| `MEGA_EMAIL` | Ya* | Email akun Mega.nz |
+| `MEGA_PASSWORD` | Ya* | Password akun Mega.nz |
 
 #### Redis Configuration
 | Variabel | Wajib | Deskripsi | Default |
@@ -213,7 +215,7 @@ Berikut adalah daftar perintah utama yang tersedia.
 | `/text2pdf [teks]` | Mengkonversi teks panjang menjadi file PDF yang diformat rapi. |
 | `/download [URL]` | Mengunduh post/reel/story dari Instagram. |
 
-### Google Drive
+### Cloud Storage
 | Command | Deskripsi |
 |---|---|
 | `/gdrive [caption]` | Mengunggah file (reply atau kirim dengan caption) ke folder Drive utama. |
@@ -223,6 +225,8 @@ Berikut adalah daftar perintah utama yang tersedia.
 | `/gdrive rename [lama] [baru]` | Mengganti nama folder yang tersimpan di riwayat. |
 | `/gdrive done` | Mengakhiri sesi upload. |
 | `/gdrive status` | Melihat status sesi upload yang sedang berjalan. |
+| `/mega start` | Memulai sesi upload ke folder default di Mega.nz. |
+| `/mega done` | Mengakhiri sesi upload di Mega.nz. |
 
 ### Informasi & Utilitas
 | Command | Deskripsi |

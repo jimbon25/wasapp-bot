@@ -22,10 +22,9 @@ Bot WhatsApp multifungsi dengan fitur AI chat (Gemini), Instagram downloader, tr
 -   **PDF Generator**: Konversi teks (`/text2pdf`), gambar (`/topdf`), dan dokumen Word (`/word2pdf`) ke PDF.
 -   **Formatting Profesional**: Output PDF diformat dengan template HTML untuk keterbacaan.
 
-### Integrasi Google Drive
--   **Upload File**: Unggah file (foto, video, dokumen) ke Google Drive dengan `/gdrive`.
--   **Mode Single & Multi-upload**: Upload satu file atau mulai sesi untuk upload banyak file ke dalam satu folder.
--   **Manajemen Folder**: Buat, lihat riwayat, dan ganti nama folder Drive langsung dari bot.
+### Integrasi Cloud Storage
+-   **Google Drive**: Unggah file ke Google Drive dengan `/gdrive`, mendukung sesi multi-upload dan manajemen folder.
+-   **Mega.nz**: Unggah file ke Mega.nz dengan `/mega`, mendukung sesi multi-upload ke folder default.
 
 ### Informasi & Utilitas
 -   **Maps Service**: Cari lokasi terdekat dengan `/maps`.
@@ -91,6 +90,7 @@ Buka file `.env` dan isi variabel-variabel penting seperti:
 -   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`: Untuk notifikasi error via Telegram
 -   `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`: Konfigurasi Redis Anda
 -   `INSTAGRAM_ACCOUNT_1_USERNAME`, `INSTAGRAM_ACCOUNT_1_PASSWORD`: Minimal satu akun Instagram untuk downloader
+-   `MEGA_EMAIL`, `MEGA_PASSWORD`: Untuk fitur upload ke Mega.nz
 
 Lihat [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) untuk daftar lengkap konfigurasi dan penjelasannya.
 
@@ -161,6 +161,8 @@ Berikut adalah daftar perintah utama yang tersedia. Untuk daftar lengkap dan ban
 |                    | `/gdrive rename [lama] [baru]`        | Mengganti nama folder yang tersimpan.                                  |
 |                    | `/gdrive status`                      | Melihat status sesi upload yang sedang berjalan.                       |
 |                    | `/gdrive done`                        | Mengakhiri sesi upload Google Drive.                                   |
+| **Mega.nz**        | `/mega start`                         | Memulai sesi upload ke folder default di Mega.                         |
+|                    | `/mega done`                          | Mengakhiri sesi upload Mega.                                           |
 | **Moderasi Grup**  | `/kick [@user/reply]`                 | Mengeluarkan anggota dari grup.                                        |
 |                    | `/add [nomor]`                        | Menambahkan anggota ke grup.                                           |
 |                    | `/addreply [kunci] [balasan]`         | Menambah atau memperbarui aturan auto-reply.                           |
@@ -180,6 +182,7 @@ Berikut adalah daftar perintah utama yang tersedia. Untuk daftar lengkap dan ban
 Untuk informasi lebih detail mengenai setiap aspek bot, silakan kunjungi dokumen-dokumen berikut:
 
 -   [**Panduan Integrasi Google Drive**](./docs/GOOGLE_DRIVE.md): Konfigurasi dan penggunaan fitur Google Drive dari A-Z.
+-   [**Panduan Fitur Mega.nz Uploader**](./docs/MEGA.md): Konfigurasi dan penggunaan fitur upload ke Mega.nz.
 -   [**Panduan Fitur Instagram Downloader**](./docs/INSTAGRAM.md): Konfigurasi dan cara kerja fitur download Instagram.
 -   [**Panduan Fitur Auto-Reply**](./docs/AUTOREPLY.md): Panduan lengkap untuk mengelola fitur auto-reply.
 -   [**Dokumentasi Lengkap (Utama)**](./docs/DOKUMENTASI_LENGKAP.md): Penjelasan semua fitur, instalasi, dan perintah.
@@ -218,4 +221,4 @@ Untuk informasi lebih detail mengenai setiap aspek bot, silakan kunjungi dokumen
     -   Verifikasi format dan ukuran gambar.
 
 Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubleshooting](docs/DOKUMENTASI_LENGKAP.md#6-troubleshooting).
-ubleshooting).
+

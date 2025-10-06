@@ -1,4 +1,3 @@
-
 import { Storage } from 'megajs';
 import fs from 'fs';
 import path from 'path';
@@ -60,11 +59,12 @@ class MegaService {
         }
 
         try {
+            const uploadTarget = this.root;
             const fileName = remoteFileName || path.basename(filePath);
-            logger.info(`Uploading file ${fileName} to Mega.nz...`);
+            logger.info(`Uploading file "${fileName}" to Mega.nz folder "${uploadTarget.name}"...`);
 
             const fileStream = fs.createReadStream(filePath);
-            const uploadedFile = await this.root.upload({
+            const uploadedFile = await uploadTarget.upload({
                 name: fileName,
                 size: fs.statSync(filePath).size
             }, fileStream).complete;
@@ -75,7 +75,8 @@ class MegaService {
             return {
                 name: uploadedFile.name,
                 size: uploadedFile.size,
-                link: link
+                link: link,
+                folder: uploadTarget.name
             };
         } catch (error) {
             logger.error('Failed to upload file to Mega.nz:', error);
