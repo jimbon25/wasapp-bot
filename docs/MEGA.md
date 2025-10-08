@@ -1,116 +1,139 @@
-# Panduan Fitur Mega.nz Uploader
+# Panduan Fitur Mega.nz Uploader (Per-Akun Admin)
 
-Dokumen ini menjelaskan cara mengkonfigurasi dan menggunakan fitur upload ke Mega.nz, termasuk mode upload tunggal dan mode sesi untuk banyak file.
+Dokumen ini menjelaskan cara mengkonfigurasi dan menggunakan fitur upload ke Mega.nz, di mana setiap admin dapat menghubungkan dan menggunakan akun Mega.nz pribadinya masing-masing.
 
 ## Daftar Isi
-1.  [Fitur Utama](#1-fitur-utama)
-2.  [Konfigurasi (.env)](#2-konfigurasi-env)
-3.  [Cara Penggunaan](#3-cara-penggunaan)
-4.  [Skenario Penggunaan](#4-skenario-penggunaan)
-5.  [Troubleshooting](#5-troubleshooting)
+1.  [Konsep Utama](#1-konsep-utama)
+2.  [Langkah 1: Konfigurasi Awal (.env)](#2-langkah-1-konfigurasi-awal-env)
+3.  [Langkah 2: Menghubungkan Akun Mega](#3-langkah-2-menghubungkan-akun-mega)
+4.  [Langkah 3: Cara Menggunakan Fitur Upload](#4-langkah-3-cara-menggunakan-fitur-upload)
+5.  [Skenario Penggunaan Lengkap](#5-skenario-penggunaan-lengkap)
+6.  [Troubleshooting](#6-troubleshooting)
 
 ---
 
-## 1. Fitur Utama
+## 1. Konsep Utama
 
--   **Upload File Tunggal**: Kemudahan untuk meng-upload satu file dengan cepat tanpa memulai sesi.
--   **Sesi Multi-Upload**: Memulai "mode sesi" di mana semua file yang dikirim akan di-upload secara otomatis ke folder yang sama.
--   **Folder Terpusat**: Semua file di-upload ke satu folder default yang telah dikonfigurasi di file `.env`, menyederhanakan manajemen file.
+Tidak seperti layanan lain yang menggunakan satu akun terpusat, fitur Mega.nz ini dirancang agar setiap admin dapat meng-upload file ke akun Mega.nz mereka sendiri. Ini memberikan beberapa keuntungan:
 
----
-
-## 2. Konfigurasi (.env)
-
-Untuk mengaktifkan fitur ini, Anda perlu menambahkan kredensial akun Mega.nz Anda ke dalam file `.env` di direktori utama bot.
-
-Buka file `.env` dan isi variabel-variabel berikut:
-
-| Variabel | Wajib | Deskripsi | 
-| :--- | :--- | :--- | 
-| `MEGA_EMAIL` | Ya | Alamat email yang terdaftar di akun Mega.nz Anda. | 
-| `MEGA_PASSWORD` | Ya | Kata sandi akun Mega.nz Anda. **Penting:** Menyimpan kata sandi dalam bentuk teks biasa memiliki risiko keamanan. Pastikan file `.env` Anda aman. | 
-| `MEGA_UPLOAD_FOLDER`| Tidak | Path folder di Mega.nz tempat file akan di-upload. Jika tidak diisi, file akan di-upload ke folder root. Contoh: `/Root/WabotUploads/` | 
-
-Setelah mengisi variabel di atas, simpan file `.env` dan restart bot agar konfigurasi baru dapat dimuat.
+-   **Privasi**: File Anda tersimpan di ruang penyimpanan pribadi Anda, bukan di akun bersama.
+-   **Manajemen Kuota**: Kuota transfer dan penyimpanan yang digunakan adalah kuota dari akun pribadi Anda, sehingga tidak akan mengganggu admin lain.
+-   **Keamanan**: Kredensial Anda disimpan secara terenkripsi dan hanya digunakan saat Anda melakukan perintah upload.
 
 ---
 
-## 3. Cara Penggunaan
+## 2. Langkah 1: Konfigurasi Awal (.env)
 
-Setelah konfigurasi selesai, Anda dapat menggunakan perintah-perintah berikut.
+Langkah pertama dan paling penting adalah menyiapkan "kunci rahasia" (secret key) yang akan digunakan bot untuk mengenkripsi semua password akun Mega. Kunci ini **wajib** diisi.
+
+1.  Buka file `.env` Anda.
+2.  Tambahkan baris berikut:
+
+    ```
+    MEGA_CREDENTIALS_SECRET=kunci_acak_yang_sangat_panjang_dan_aman
+    ```
+
+3.  Ganti `kunci_acak_yang_sangat_panjang_dan_aman` dengan teks acak Anda sendiri. Semakin panjang dan acak, semakin baik.
+
+4.  (Opsional) Anda juga bisa mengatur folder tujuan default di dalam akun Mega Anda:
+
+    ```
+    MEGA_UPLOAD_FOLDER=/Root/FolderTujuanBot/
+    ```
+    Jika tidak diatur, file akan di-upload ke folder root akun Mega Anda.
+
+5.  Simpan file `.env` dan **restart bot**.
+
+---
+
+## 3. Langkah 2: Menghubungkan Akun Mega
+
+Setelah bot di-restart dengan kunci rahasia, setiap admin harus menghubungkan akun Mega mereka masing-masing.
+
+**PENTING:** Perintah-perintah berikut harus dijalankan di **chat pribadi (PC)** dengan bot untuk menjaga keamanan kredensial Anda.
+
+-   **Menghubungkan Akun (`/mega login`)**
+    Gunakan perintah ini untuk mendaftarkan email dan password Mega Anda ke bot.
+    ```
+    /mega login emailanda@contoh.com password_akun_mega_anda
+    ```
+    Bot akan mengenkripsi password Anda, menyimpannya, dan secara otomatis akan mencoba menghapus pesan Anda yang berisi password tersebut.
+
+-   **Memutus Koneksi Akun (`/mega logout`)**
+    Gunakan perintah ini untuk menghapus kredensial Anda dari penyimpanan bot.
+    ```
+    /mega logout
+    ```
+
+-   **Mengecek Akun (`/mega account`)**
+    Gunakan perintah ini untuk melihat akun email Mega yang sedang terhubung.
+    ```
+    /mega account
+    ```
+
+---
+
+## 4. Langkah 3: Cara Menggunakan Fitur Upload
+
+Setelah akun Anda terhubung, Anda bisa mulai meng-upload file.
 
 ### Upload File Tunggal
 
-Gunakan perintah `/mega` untuk meng-upload satu file saja. Ini bisa dilakukan dengan dua cara:
+Gunakan perintah `/mega` untuk meng-upload satu file saja. File akan di-upload ke akun Mega Anda yang terhubung.
 
-1.  **Dengan Caption**: Kirim file (gambar, video, atau dokumen) dan sertakan caption `/mega`.
-2.  **Dengan Balasan (Reply)**: Balas (reply) pesan yang berisi file dengan pesan `/mega`.
-
-Bot akan meng-upload file tersebut dan membalas dengan link-nya.
+1.  **Dengan Caption**: Kirim file dan sertakan caption `/mega`.
+2.  **Dengan Balasan (Reply)**: Balas pesan yang berisi file dengan pesan `/mega`.
 
 ### Sesi Multi-Upload
 
-Ini adalah mode yang efisien untuk meng-upload banyak file sekaligus.
-
--   **Memulai Sesi**
+-   **Memulai Sesi (`/mega start`)**
     ```
     /mega start
     ```
-    Setelah mengirim perintah ini, bot akan masuk ke mode sesi. Bot akan membalas untuk mengonfirmasi bahwa sesi telah dimulai.
+    Memulai mode sesi. Semua file yang Anda kirim setelah ini akan otomatis di-upload ke akun Mega Anda.
 
--   **Mengirim File**
-    Setelah sesi aktif, cukup kirimkan file-file Anda (gambar, video, dokumen) satu per satu ke chat. Bot akan secara otomatis meng-upload setiap file yang masuk dan memberikan reaksi (reaction) ✅ pada pesan Anda sebagai tanda upload berhasil.
-
--   **Mengakhiri Sesi**
+-   **Mengakhiri Sesi (`/mega done`)**
     ```
     /mega done
     ```
-    Setelah Anda selesai mengirim semua file, kirim perintah ini untuk keluar dari mode sesi. Bot akan memberikan konfirmasi bahwa sesi telah berakhir.
+    Mengakhiri mode sesi upload.
 
 ---
 
-## 4. Skenario Penggunaan
+## 5. Skenario Penggunaan Lengkap
 
-Berikut adalah contoh alur kerja lengkap untuk meng-upload 3 file ke Mega.nz.
+1.  **Admin (di PC dengan bot) menghubungkan akun:**
+    > **/mega login email.admin@gmail.com password_rahasia_admin**
 
-1.  **Anda memulai sesi:**
+2.  **Bot membalas dan menghapus pesan asli:**
+    > ✅ Akun Mega.nz Anda telah berhasil terhubung. Kredensial Anda disimpan dalam bentuk terenkripsi.
+
+3.  **Admin memulai sesi upload (bisa di grup atau PC):**
     > **/mega start**
 
-2.  **Bot membalas:**
-    > ✅ Sesi upload Mega dimulai. Semua file yang Anda kirim sekarang akan diupload ke folder default.\n\nKetik `/mega done` untuk mengakhiri sesi.
+4.  **Bot membalas:**
+    > ✅ Sesi upload Mega dimulai. Semua file yang Anda kirim sekarang akan diupload ke akun Mega Anda.\n\nKetik `/mega done` untuk mengakhiri sesi.
 
-3.  **Anda mengirim file pertama:**
-    > (Anda mengirim file `foto_liburan.jpg`)
+5.  **Admin mengirim beberapa file ke chat.** Bot akan memberi reaksi ✅ pada setiap file yang berhasil di-upload ke akun Mega admin tersebut.
 
-4.  **Bot merespons:**
-    > (Bot memberikan reaksi ✅ pada pesan gambar Anda)
-
-5.  **Anda mengirim file kedua dan ketiga:**
-    > (Anda mengirim file `video_pantai.mp4` dan `catatan_perjalanan.pdf`)
-
-6.  **Bot merespons:**
-    > (Bot memberikan reaksi ✅ pada setiap pesan file tersebut)
-
-7.  **Anda mengakhiri sesi:**
+6.  **Admin mengakhiri sesi:**
     > **/mega done**
 
-8.  **Bot membalas:**
+7.  **Bot membalas:**
     > ✅ Sesi upload Mega telah diakhiri.
-
-Ketiga file tersebut sekarang sudah berhasil di-upload ke folder yang Anda tentukan di `.env`.
 
 ---
 
-## 5. Troubleshooting
+## 6. Troubleshooting
 
--   **Error: "Failed to login to Mega.nz..."**
-    -   **Penyebab:** Email atau password di file `.env` salah.
-    -   **Solusi:** Periksa kembali `MEGA_EMAIL` dan `MEGA_PASSWORD` Anda, pastikan tidak ada salah ketik.
+-   **Error: "Gagal login ke Mega.nz. Periksa kembali email dan password Anda..."**
+    -   **Penyebab:** Email atau password yang Anda daftarkan melalui `/mega login` salah.
+    -   **Solusi:** Jalankan kembali perintah `/mega login` dengan kredensial yang benar.
 
--   **Error: "EAGAIN (-3): A temporary congestion..."**
-    -   **Penyebab:** Ini adalah error dari server Mega.nz yang menandakan server sedang sibuk atau mengalami gangguan sementara.
-    -   **Solusi:** Ini bukan kesalahan pada bot. Coba lagi dalam beberapa menit.
+-   **Error: "Akun Mega.nz Anda belum terhubung..."**
+    -   **Penyebab:** Anda mencoba menggunakan fitur upload (`/mega start` atau lainnya) sebelum menghubungkan akun.
+    -   **Solusi:** Kirim pesan `/mega login <email> <password>` di chat pribadi dengan bot terlebih dahulu.
 
--   **Upload Gagal Tanpa Pesan Error yang Jelas**
-    -   **Penyebab:** Bisa jadi karena koneksi internet bot terputus atau file yang Anda kirim rusak (corrupt).
-    -   **Solusi:** Pastikan koneksi internet stabil dan coba kirim file lain yang valid.
+-   **Error: "MEGA_CREDENTIALS_SECRET is not defined..."**
+    -   **Penyebab:** Anda belum mengatur kunci rahasia di file `.env`.
+    -   **Solusi:** Ikuti [Langkah 1: Konfigurasi Awal](#2-langkah-1-konfigurasi-awal-env) dalam dokumentasi ini.

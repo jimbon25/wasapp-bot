@@ -40,6 +40,7 @@ const config = {
     email: process.env.MEGA_EMAIL,
     password: process.env.MEGA_PASSWORD,
     uploadFolder: process.env.MEGA_UPLOAD_FOLDER || '/Root/WabotUploads/',
+    credentialsSecret: process.env.MEGA_CREDENTIALS_SECRET
   },
 
   system: {

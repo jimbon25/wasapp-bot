@@ -5,63 +5,41 @@ import logger from '../../utils/common/logger.js';
 import config from '../../config.js';
 
 class MegaService {
-    constructor() {
-        this.email = config.mega.email;
-        this.password = config.mega.password;
-        this.uploadFolder = config.mega.uploadFolder;
-        this.storage = null;
-        this.isInitialized = false;
-        this.root = null;
-    }
 
-    async initialize() {
-        if (this.isInitialized) {
-            return;
+    async uploadFile(filePath, remoteFileName, credentials) {
+        if (!credentials || !credentials.email || !credentials.password) {
+            throw new Error('Mega.nz credentials are required but were not provided.');
         }
 
-        if (!this.email || !this.password) {
-            throw new Error('Mega.nz email or password is not configured in .env file.');
+        let storage;
+        try {
+            storage = await new Storage({
+                email: credentials.email,
+                password: credentials.password
+            }).ready;
+        } catch (error) {
+            logger.error('Failed to login to Mega.nz with provided credentials:', error);
+            throw new Error('Gagal login ke Mega.nz. Periksa kembali email dan password Anda melalui `/mega account`.');
         }
 
         try {
-            logger.info('Initializing Mega.nz service and logging in...');
-            this.storage = await new Storage({
-                email: this.email,
-                password: this.password
-            }).ready;
+            const uploadFolder = config.mega.uploadFolder || '/Root/';
+            let uploadTarget = storage.root;
 
-            this.root = this.storage.root;
-            if (this.uploadFolder && this.uploadFolder !== '/Root/') {
-                let folderNode = this.storage.root;
-                const parts = this.uploadFolder.split('/').filter(p => p && p !== 'Root');
+            // Navigate to the target upload folder if specified
+            if (uploadFolder && uploadFolder !== '/Root/') {
+                const parts = uploadFolder.split('/').filter(p => p && p !== 'Root');
                 for (const part of parts) {
-                    let child = folderNode.children.find(c => c.name === part);
+                    let child = uploadTarget.children.find(c => c.name === part);
                     if (!child) {
-                        logger.info(`Creating Mega folder: ${part}`);
-                        child = await folderNode.mkdir(part);
+                        child = await uploadTarget.mkdir(part);
                     }
-                    folderNode = child;
+                    uploadTarget = child;
                 }
-                this.root = folderNode;
             }
 
-            this.isInitialized = true;
-            logger.info('Mega.nz service initialized successfully.');
-        } catch (error) {
-            logger.error('Failed to login to Mega.nz:', error);
-            throw new Error('Failed to login to Mega.nz. Please check your credentials in the .env file.');
-        }
-    }
-
-    async uploadFile(filePath, remoteFileName) {
-        if (!this.isInitialized) {
-            await this.initialize();
-        }
-
-        try {
-            const uploadTarget = this.root;
             const fileName = remoteFileName || path.basename(filePath);
-            logger.info(`Uploading file "${fileName}" to Mega.nz folder "${uploadTarget.name}"...`);
+            logger.info(`Uploading file "${fileName}" to Mega.nz folder "${uploadTarget.name}" for user ${credentials.email}...`);
 
             const fileStream = fs.createReadStream(filePath);
             const uploadedFile = await uploadTarget.upload({
@@ -81,12 +59,15 @@ class MegaService {
         } catch (error) {
             logger.error('Failed to upload file to Mega.nz:', error);
             if (error.message.includes('ESID')) {
-                 throw new Error('Mega.nz session expired. The bot might need a restart.');
+                 throw new Error('Sesi Mega.nz berakhir. Coba lagi.');
             }
             if (error.message.includes('EFAILED')) {
-                throw new Error('Mega.nz upload failed. The file might be empty or corrupted.');
+                throw new Error('Upload Mega.nz gagal. File mungkin kosong atau rusak.');
             }
-            throw new Error('An unexpected error occurred during Mega.nz upload.');
+            if (error.message.includes('EAGAIN')) {
+                throw new Error('Server Mega.nz sedang sibuk. Silakan coba lagi dalam beberapa saat.');
+            }
+            throw new Error('Terjadi kesalahan tak terduga saat upload ke Mega.nz.');
         }
     }
 }
