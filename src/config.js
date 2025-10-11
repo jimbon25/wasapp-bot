@@ -160,6 +160,12 @@ const config = {
     temperature: parseFloat(process.env.TEMPERATURE) || 0.8, // AI model temperature (creativity)
     geminiModels: (process.env.GEMINI_MODELS || 'models/gemini-1.5-flash').split(',').filter(m => m).map(m => m.trim()), // Comma-separated list of Gemini models to use
 
+    // Proactive AI Chatbot Mode
+    proactive: {
+      enabled: process.env.AI_PROACTIVE_MODE_ENABLED === 'true',
+      idleTimeout: parseInt(process.env.AI_PROACTIVE_IDLE_TIMEOUT_MINUTES, 10) || 15,
+    },
+
     // Directory Settings
     baseDir: process.env.BASE_DIR || process.cwd(), // Base directory for the application
     logDir: process.env.LOG_DIR || join(__dirname, '../logs'), // Directory for application logs

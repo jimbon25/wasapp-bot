@@ -3,6 +3,8 @@ import logger from '../utils/common/logger.js';
 import { redisManager } from '../utils/redis/index.js';
 import { autoReplyManager } from '../features/autoreply.js';
 import moderationService from '../services/moderationService.js';
+import proactiveAiHandler from '../handlers/proactiveAiHandler.js'; // Import the new handler
+import { CHAT_MODES } from '../utils/common/prompts.js'; // Import chat modes
 
 /**
  * Sets up event listeners for the WhatsApp client.
@@ -49,6 +51,15 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
             const validationResult = await securityManager.validateAndQueueMessage(
                 message,
                 async () => {
+                    // New Proactive AI Logic
+                    const shouldTrigger = await proactiveAiHandler.shouldTrigger(message);
+                    if (shouldTrigger) {
+                        const response = await aiHandler.handleMessage(message.from, message.body, CHAT_MODES.PROACTIVE);
+                        await message.reply(response);
+                        return; // Stop further processing
+                    }
+
+                    // Existing Logic
                     if (message.location) {
                         const mapsCommand = commandHandler.commands.get('maps');
                         if (mapsCommand) {
