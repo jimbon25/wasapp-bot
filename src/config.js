@@ -166,6 +166,13 @@ const config = {
       idleTimeout: parseInt(process.env.AI_PROACTIVE_IDLE_TIMEOUT_MINUTES, 10) || 15,
     },
 
+    // Auto Upload Feature
+    autoUpload: {
+      enabled: !!process.env.AUTO_UPLOAD_GROUP_IDS,
+      groupIds: (process.env.AUTO_UPLOAD_GROUP_IDS || '').split(',').map(id => id.trim()).filter(id => id),
+      debounceSeconds: parseInt(process.env.AUTO_UPLOAD_DEBOUNCE_SECONDS, 10) || 30
+    },
+
     // Directory Settings
     baseDir: process.env.BASE_DIR || process.cwd(), // Base directory for the application
     logDir: process.env.LOG_DIR || join(__dirname, '../logs'), // Directory for application logs
