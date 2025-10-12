@@ -49,7 +49,7 @@ export default {
             try {
                 await googleDriveService.uploadFile(tempFilePath, fileName, session.folderId, mimeType);
                 await uploadSessionService.updateSession(userId);
-                await message.react('✅');
+                await message.react('');
                 return true;
             } catch (error) {
                 await message.react('❌');
@@ -89,7 +89,7 @@ export default {
                 
                 const session = await uploadSessionService.getSession(userId);
                 await uploadSessionService.endSession(userId);
-                await message.reply(`✅ Sesi upload ke folder "${session.folderName}" selesai.\nTotal file yang diupload: ${session.uploadCount}\n\nFolder Link: ${session.folderLink}`);
+                await message.reply(` Sesi upload ke folder "${session.folderName}" selesai.\nTotal file yang diupload: ${session.uploadCount}\n\nFolder Link: ${session.folderLink}`);
                 return;
             }
 
@@ -116,7 +116,7 @@ export default {
                 await driveFolderService.updateFolderAccess(userId, existingFolder.folderId);
                 
                 await message.reply(
-                    '✅ Sesi upload dimulai!\n' +
+                    ' Sesi upload dimulai!\n' +
                     `Folder: ${existingFolder.folderName}\n` +
                     `Dibuat pada: ${driveFolderService.formatDate(existingFolder.createdAt)}\n` +
                     'Silakan kirim foto/media yang ingin diupload.\n' +
@@ -135,7 +135,7 @@ export default {
                 
                 const renamed = await driveFolderService.renameFolder(userId, oldName, newName);
                 if (renamed) {
-                    await message.reply(`✅ Folder "${oldName}" telah diubah menjadi "${newName}"`);
+                    await message.reply(` Folder "${oldName}" telah diubah menjadi "${newName}"`);
                 } else {
                     await message.reply(`❌ Folder "${oldName}" tidak ditemukan!`);
                 }
@@ -172,7 +172,7 @@ export default {
                         folderName: folderName,
                         createdAt: new Date().toISOString()
                     });
-                    await message.reply(`✅ Sesi upload dimulai!\n\nFolder: ${folderName}\nSilakan kirim foto/media yang ingin diupload.\nKetik /gdrive done untuk mengakhiri sesi.`);
+                    await message.reply(` Sesi upload dimulai!\n\nFolder: ${folderName}\nSilakan kirim foto/media yang ingin diupload.\nKetik /gdrive done untuk mengakhiri sesi.`);
                     return;
                 } catch (error) {
                     await message.reply('❌ Gagal membuat folder di Google Drive. Mohon coba lagi.');
@@ -210,9 +210,9 @@ export default {
 
                 if (session) {
                     await uploadSessionService.updateSession(userId);
-                    await message.reply('✅ File berhasil diupload ke folder!');
+                    await message.reply('File berhasil diupload ke folder!');
                 } else {
-                    await message.reply(`✅ File berhasil diupload ke Google Drive!\n\nLink: ${result.webViewLink}`);
+                    await message.reply(`File berhasil diupload ke Google Drive!\n\nLink: ${result.webViewLink}`);
                 }
             } catch (error) {
                 if (error.message.includes('rate limit')) {

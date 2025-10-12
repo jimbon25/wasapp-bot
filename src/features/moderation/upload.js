@@ -19,7 +19,6 @@ export default {
             return message.reply('❌ Format salah. Gunakan `/upload drive` atau `/upload mega`.');
         }
 
-        // This command must be a reply to a message.
         if (!message.hasQuotedMsg) {
             return message.reply('❌ Perintah ini harus digunakan dengan membalas pesan konfirmasi dari bot.');
         }
@@ -37,42 +36,58 @@ export default {
         }
 
         const fileCount = batch.messages.length;
-        await message.reply(`⏳ Oke, mengupload ${fileCount} file ke ${target}. Ini mungkin butuh beberapa saat...`);
-
-        const uploadPromises = batch.messages.map(async (mediaMsg) => {
-            let tempFilePath = null;
-            try {
-                const media = await mediaMsg.downloadMedia();
-                tempFilePath = await fileManager.saveMedia(media, media.filename || `upload-${Date.now()}`);
-                
-                if (target === 'drive') {
-                    return await googleDriveService.uploadFile(tempFilePath, media.filename);
-                } else if (target === 'mega') {
-                    const userCredentials = await megaAuthService.getCredentials(senderId);
-                    if (!userCredentials) {
-                        throw new Error('Akun Mega.nz Anda tidak terhubung.');
-                    }
-                    return await megaService.uploadFile(tempFilePath, media.filename, userCredentials);
-                }
-            } finally {
-                if (tempFilePath) {
-                    await fileManager.deleteFile(tempFilePath).catch(e => logger.error(`Failed to delete temp file: ${tempFilePath}`, e));
-                }
-            }
-        });
+        await message.reply(`Oke, mengupload ${fileCount} file ke ${target}. Ini mungkin butuh beberapa saat...`);
 
         try {
-            const results = await Promise.all(uploadPromises);
-            const successCount = results.length;
-            
-            let links = '';
             if (target === 'drive') {
-                links = results.map((r, i) => `${i + 1}. ${r.webViewLink}`).join('\n');
-            } else {
-                links = results.map((r, i) => `${i + 1}. ${r.link}`).join('\n');
-            }
+                // Create a new folder for the batch
+                const timestamp = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).replace(/\./g, ':');
+                const folderName = `Upload Batch - ${timestamp}`;
+                
+                await message.reply(`Membuat folder baru di Google Drive: \"${folderName}\"...`);
+                const newFolder = await googleDriveService.createFolder(folderName);
 
-            await message.reply(`✅ Berhasil mengupload ${successCount} dari ${fileCount} file ke ${target}.\n\n${links}`);
+                const uploadPromises = batch.messages.map(async (mediaMsg) => {
+                    let tempFilePath = null;
+                    try {
+                        const media = await mediaMsg.downloadMedia();
+                        tempFilePath = await fileManager.saveMedia(media, media.filename || `upload-${Date.now()}`);
+                        // Upload to the new folder ID
+                        return await googleDriveService.uploadFile(tempFilePath, media.filename, newFolder.id);
+                    } finally {
+                        if (tempFilePath) {
+                            await fileManager.deleteFile(tempFilePath).catch(e => logger.error(`Failed to delete temp file: ${tempFilePath}`, e));
+                        }
+                    }
+                });
+                
+                const results = await Promise.all(uploadPromises);
+                await message.reply(`Berhasil mengupload ${results.length} file ke folder baru!\n\nLink Folder: ${newFolder.webViewLink}`);
+
+            } else if (target === 'mega') {
+                // Keep Mega logic the same
+                const uploadPromises = batch.messages.map(async (mediaMsg) => {
+                    let tempFilePath = null;
+                    try {
+                        const media = await mediaMsg.downloadMedia();
+                        tempFilePath = await fileManager.saveMedia(media, media.filename || `upload-${Date.now()}`);
+                        const userCredentials = await megaAuthService.getCredentials(senderId);
+                        if (!userCredentials) {
+                            throw new Error('Akun Mega.nz Anda tidak terhubung.');
+                        }
+                        return await megaService.uploadFile(tempFilePath, media.filename, userCredentials);
+                    } finally {
+                        if (tempFilePath) {
+                            await fileManager.deleteFile(tempFilePath).catch(e => logger.error(`Failed to delete temp file: ${tempFilePath}`, e));
+                        }
+                    }
+                });
+
+                const results = await Promise.all(uploadPromises);
+                const successCount = results.length;
+                const links = results.map((r, i) => `${i + 1}. ${r.link}`).join('\n');
+                await message.reply(`Berhasil mengupload ${successCount} dari ${fileCount} file ke Mega.nz.\n\n${links}`);
+            }
 
         } catch (error) {
             logger.error(`Error on bulk /upload command:`, error);

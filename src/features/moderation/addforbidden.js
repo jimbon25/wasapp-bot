@@ -16,7 +16,7 @@ export default {
             const added = await moderationService.addForbiddenWord(word);
             
             if (added) {
-                await message.reply(`✅ Kata "${word}" telah ditambahkan ke daftar terlarang.`);
+                await message.reply(` Kata "${word}" telah ditambahkan ke daftar terlarang.`);
             } else {
                 await message.reply(`❌ Gagal menambahkan kata "${word}" ke daftar terlarang. Mungkin sudah ada atau terjadi kesalahan.`);
             }

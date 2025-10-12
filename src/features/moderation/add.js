@@ -31,7 +31,7 @@ export default {
             
             if (result.code === 200) {
                  logger.info(`User ${userId} was added to group ${chat.name} by ${message.from}.`);
-                 await message.reply(`✅ Berhasil menambahkan ${normalizedNumber} ke grup.`);
+                 await message.reply(`Berhasil menambahkan ${normalizedNumber} ke grup.`);
             } else if (result.code === 403) {
                  await message.reply(`❌ Gagal menambahkan ${normalizedNumber}. Pengguna tersebut mungkin mengaktifkan setelan privasi grup atau nomornya salah.`);
             } else if (result.code === 404) {

@@ -72,7 +72,7 @@ const command = {
                             dataLength: media.data.length
                         });
 
-                        await chat.sendMessage('✅ Here is your PDF document', {
+                        await chat.sendMessage(' Here is your PDF document', {
                             media: media
                         });
                     } catch (sendError) {

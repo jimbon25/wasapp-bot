@@ -45,7 +45,7 @@ rl.question('Enter the code from that page here: ', async (code) => {
             fields: 'files(name)'
         });
         
-        console.log('✅ Connection successful! Found', response.data.files.length, 'files');
+        console.log(' Connection successful! Found', response.data.files.length, 'files');
         console.log('Bot is ready to use Google Drive features');
     } catch (error) {
         console.error('Error retrieving access token:', error);

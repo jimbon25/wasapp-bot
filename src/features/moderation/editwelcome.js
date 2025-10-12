@@ -29,7 +29,7 @@ export default {
             await welcomeManager.setWelcome(groupId, newMessage);
 
             logger.info(`Welcome message edited in group ${chat.name} (${groupId}) by admin`);
-            await message.reply(`✅ Pesan selamat datang telah diubah:\n\nPesan lama:\n"${currentMessage}"\n\nPesan baru:\n"${newMessage}"`);
+            await message.reply(` Pesan selamat datang telah diubah:\n\nPesan lama:\n"${currentMessage}"\n\nPesan baru:\n"${newMessage}"`);
 
         } catch (error) {
             logger.error(`Error pada perintah /editwelcome:`, error);

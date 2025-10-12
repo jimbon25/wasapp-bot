@@ -34,7 +34,7 @@ async function testRedisConnection() {
         const success = value === 'test';
         
         console.log('Redis Test Operation:', success ? 'Success' : 'Failed');
-        console.log('✅ Redis Connection:', success ? 'Success' : 'Failed');
+        console.log(' Redis Connection:', success ? 'Success' : 'Failed');
         return success;
     } catch (error) {
         console.error('❌ Redis Connection Error:', error.message);
@@ -57,7 +57,7 @@ async function testMessageQueue() {
         const msg1 = await messageQueueManager.dequeue();
         const msg2 = await messageQueueManager.dequeue();
         
-        console.log('✅ Message Queue Test:', 
+        console.log(' Message Queue Test:', 
             msg1.test === 'message1' && msg2.test === 'message2' ? 'Success' : 'Failed');
         return true;
     } catch (error) {
@@ -84,7 +84,7 @@ async function testRateLimiting() {
         // Should be rate limited now
         const allowed2 = await rateLimitManager.checkRateLimit(testId);
         
-        console.log('✅ Rate Limiting Test:', 
+        console.log(' Rate Limiting Test:', 
             allowed1 && !allowed2 ? 'Success' : 'Failed');
         return true;
     } catch (error) {
@@ -106,7 +106,7 @@ async function testSessionBackup() {
         // Test restore
         const restored = await sessionBackupManager.restoreSession('test');
         
-        console.log('✅ Session Backup Test:', 
+        console.log(' Session Backup Test:', 
             JSON.stringify(restored) === JSON.stringify(testSession) ? 'Success' : 'Failed');
         return true;
     } catch (error) {
@@ -133,7 +133,7 @@ async function testCachePerformance() {
         const end = Date.now();
         const timePerOp = (end - start) / 1000;
         
-        console.log('✅ Cache Performance Test:', 
+        console.log(' Cache Performance Test:', 
             cached && timePerOp < 1 ? 'Success' : 'Failed',
             `(${timePerOp.toFixed(3)}ms per operation)`);
         return true;
@@ -156,7 +156,7 @@ async function testMonitoring() {
         // Test health check
         const health = await performanceMonitor.checkHealth();
         
-        console.log('✅ Monitoring Test:', 
+        console.log(' Monitoring Test:', 
             metrics.length > 0 && health.status ? 'Success' : 'Failed');
         return true;
     } catch (error) {
@@ -180,7 +180,7 @@ async function runTests() {
     
     console.log('\n📊 Test Results Summary:');
     Object.entries(results).forEach(([test, passed]) => {
-        console.log(`${passed ? '✅' : '❌'} ${test}: ${passed ? 'PASSED' : 'FAILED'}`);
+        console.log(`${passed ? '' : ''} ${test}: ${passed ? 'PASSED' : 'FAILED'}`);
     });
     
     const totalPassed = Object.values(results).filter(r => r).length;

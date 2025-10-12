@@ -118,7 +118,7 @@ export default {
                 if (scope === 'group') scopeMessage = 'untuk grup ini';
                 if (scope === 'user') scopeMessage = `untuk pengguna ${contextId}`;
 
-                const replyMessage = `✅ Auto-reply (${replyData.type}) untuk kata kunci "${keywords.join(', ')}" telah ditambahkan ${scopeMessage}.`;
+                const replyMessage = ` Auto-reply (${replyData.type}) untuk kata kunci "${keywords.join(', ')}" telah ditambahkan ${scopeMessage}.`;
                 logger.info(`[addreply] Admin ${senderId} added rule. Scope: ${scope}, Context: ${contextId}, Keywords: "${keywords.join(', ')}"`);
                 await message.reply(replyMessage);
             } else {

@@ -4,6 +4,7 @@ Dokumen ini adalah panduan terpusat yang mencakup semua aspek dari WhatsApp Bot,
 
 ## Dokumentasi Terkait
 Untuk panduan yang lebih spesifik mengenai fitur-fitur utama, silakan lihat:
+- **[Panduan Fitur Auto-Upload Media](./AUTO_UPLOAD.md)**
 - **[Panduan Integrasi Google Drive](./GOOGLE_DRIVE.md)**
 - **[Panduan Fitur Mega.nz Uploader](./MEGA.md)**
 - **[Panduan Fitur Instagram Downloader](./INSTAGRAM.md)**

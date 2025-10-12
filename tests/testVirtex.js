@@ -42,7 +42,7 @@ for (const test of testCases) {
     
     if (success) {
         passed++;
-        console.log(`✅ ${test.name}: PASSED`);
+        console.log(` ${test.name}: PASSED`);
     } else {
         failed++;
         console.log(`❌ ${test.name}: FAILED`);

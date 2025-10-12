@@ -5,7 +5,7 @@ export default {
     async execute(message) {
         try {
             logger.info(`User ${message.from} pinged the bot`);
-            await message.reply('pong ✅');
+            await message.reply('pong ');
         } catch (error) {
             logger.error('Failed to respond to ping', error);
             throw error;

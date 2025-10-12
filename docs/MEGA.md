@@ -106,21 +106,21 @@ Gunakan perintah `/mega` untuk meng-upload satu file saja. File akan di-upload k
     > **/mega login email.admin@gmail.com password_rahasia_admin**
 
 2.  **Bot membalas dan menghapus pesan asli:**
-    > ✅ Akun Mega.nz Anda telah berhasil terhubung. Kredensial Anda disimpan dalam bentuk terenkripsi.
+    >  Akun Mega.nz Anda telah berhasil terhubung. Kredensial Anda disimpan dalam bentuk terenkripsi.
 
 3.  **Admin memulai sesi upload (bisa di grup atau PC):**
     > **/mega start**
 
 4.  **Bot membalas:**
-    > ✅ Sesi upload Mega dimulai. Semua file yang Anda kirim sekarang akan diupload ke akun Mega Anda.\n\nKetik `/mega done` untuk mengakhiri sesi.
+    >  Sesi upload Mega dimulai. Semua file yang Anda kirim sekarang akan diupload ke akun Mega Anda.\n\nKetik `/mega done` untuk mengakhiri sesi.
 
-5.  **Admin mengirim beberapa file ke chat.** Bot akan memberi reaksi ✅ pada setiap file yang berhasil di-upload ke akun Mega admin tersebut.
+5.  **Admin mengirim beberapa file ke chat.** Bot akan memberi reaksi pada setiap file yang berhasil di-upload ke akun Mega admin tersebut.
 
 6.  **Admin mengakhiri sesi:**
     > **/mega done**
 
 7.  **Bot membalas:**
-    > ✅ Sesi upload Mega telah diakhiri.
+    >  Sesi upload Mega telah diakhiri.
 
 ---
 

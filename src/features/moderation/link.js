@@ -18,7 +18,7 @@ export default {
             const inviteLink = `https://chat.whatsapp.com/${inviteCode}`;
             
             logger.info(`Admin ${message.from} requested invite link for group ${chat.name}.`);
-            await message.reply(`✅ Link undangan untuk grup *${chat.name}*:\n${inviteLink}`);
+            await message.reply(` Link undangan untuk grup *${chat.name}*:\n${inviteLink}`);
 
         } catch (error) {
             logger.error("Error on /link command:", error);

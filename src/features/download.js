@@ -25,7 +25,7 @@ export default {
             const filePath = await downloaderService.download(url);
 
             if (statusMsg) {
-                await statusMsg.edit('✅ Download selesai! Mengirim file...');
+                await statusMsg.edit(' Download selesai! Mengirim file...');
             }
 
             const fileInfo = await fs.stat(filePath);
@@ -54,7 +54,7 @@ export default {
                     quotedMessageId: message.id._serialized
                 });
 
-                await message.reply('✅ File berhasil dikirim!');
+                await message.reply('File berhasil dikirim!');
             } catch (error) {
                 logger.error('Error sending file:', error);
                 await message.reply('❌ Gagal mengirim file. Silakan coba lagi atau hubungi admin.');

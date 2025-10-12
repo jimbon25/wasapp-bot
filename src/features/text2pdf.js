@@ -33,7 +33,7 @@ export default {
             
             await pdfService.convertToPdf(tempTextFile, outputPdfFile);
 
-            await message.reply('✅ Teks berhasil dikonversi ke PDF');
+            await message.reply('Teks berhasil dikonversi ke PDF');
             const media = MessageMedia.fromFilePath(outputPdfFile);
             await message.reply(media, null, { sendMediaAsDocument: true });
 

@@ -56,7 +56,7 @@ export default {
                 if (scope === 'user') scopeMessage = `pengguna ${contextId}`;
 
                 logger.info(`[delreply] Admin ${senderId} deleted rule with key: "${primaryKey}" from scope: ${scope}`);
-                await message.reply(`✅ Auto-reply untuk kata kunci utama "${primaryKey}" telah dihapus dari ${scopeMessage}.`);
+                await message.reply(` Auto-reply untuk kata kunci utama "${primaryKey}" telah dihapus dari ${scopeMessage}.`);
             } else {
                 await message.reply(`⚠️ Auto-reply dengan kata kunci utama "${primaryKey}" tidak ditemukan pada scope yang ditentukan.`);
             }

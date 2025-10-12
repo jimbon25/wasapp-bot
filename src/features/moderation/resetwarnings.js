@@ -31,7 +31,7 @@ export default {
             const groupId = chat.id._serialized;
             await securityManager.resetWarnings(targetUserId, groupId);
             
-            await message.reply(`✅ Peringatan untuk pengguna @${targetUserId.split('@')[0]} di grup ini telah direset.`);
+            await message.reply(` Peringatan untuk pengguna @${targetUserId.split('@')[0]} di grup ini telah direset.`);
 
         } catch (error) {
             logger.error(`Error on /resetwarnings command:`, error);

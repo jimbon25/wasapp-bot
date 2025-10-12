@@ -31,7 +31,7 @@ async function handleMediaMessage(message) {
         await fileManager.writeBase64File(tempFilePath, downloadedMedia.data);
 
         await megaService.uploadFile(tempFilePath, remoteFileName, userCredentials);
-        await message.react('✅');
+        await message.react('');
         return true;
 
     } catch (error) {
@@ -74,7 +74,7 @@ export default {
                 const password = args[2];
 
                 await megaAuthService.saveCredentials(userId, email, password);
-                await message.reply('✅ Akun Mega.nz Anda telah berhasil terhubung. Kredensial Anda disimpan dalam bentuk terenkripsi.');
+                await message.reply(' Akun Mega.nz Anda telah berhasil terhubung. Kredensial Anda disimpan dalam bentuk terenkripsi.');
                 
                 // Delete the message containing the password for security
                 try {
@@ -89,7 +89,7 @@ export default {
             if (args[0] === 'logout') {
                 const deleted = await megaAuthService.deleteCredentials(userId);
                 if (deleted) {
-                    return message.reply('✅ Akun Mega.nz Anda telah berhasil diputus.');
+                    return message.reply(' Akun Mega.nz Anda telah berhasil diputus.');
                 }
                 return message.reply('ℹ️ Tidak ada akun Mega.nz yang terhubung.');
             }
@@ -97,7 +97,7 @@ export default {
             if (args[0] === 'account') {
                 const creds = await megaAuthService.getCredentials(userId);
                 if (creds && creds.email) {
-                    return message.reply(`✅ Akun Mega.nz yang terhubung saat ini: ${creds.email}`);
+                    return message.reply(` Akun Mega.nz yang terhubung saat ini: ${creds.email}`);
                 }
                 return message.reply('ℹ️ Tidak ada akun Mega.nz yang terhubung. Silakan login dengan `/mega login`.');
             }
@@ -110,7 +110,7 @@ export default {
 
             if (args[0] === 'start') {
                 await megaSessionService.startSession(userId);
-                return message.reply('✅ Sesi upload Mega dimulai. Semua file yang Anda kirim sekarang akan diupload ke akun Mega Anda.\n\nKetik `/mega done` untuk mengakhiri sesi.');
+                return message.reply(' Sesi upload Mega dimulai. Semua file yang Anda kirim sekarang akan diupload ke akun Mega Anda.\n\nKetik `/mega done` untuk mengakhiri sesi.');
             }
 
             if (args[0] === 'done') {
@@ -119,7 +119,7 @@ export default {
                     return message.reply('⚠️ Tidak ada sesi upload Mega yang aktif.');
                 }
                 await megaSessionService.endSession(userId);
-                return message.reply('✅ Sesi upload Mega telah diakhiri.');
+                return message.reply(' Sesi upload Mega telah diakhiri.');
             }
 
             const mediaMessage = message.hasMedia ? message : (message.hasQuotedMsg ? await message.getQuotedMessage() : null);
@@ -133,7 +133,7 @@ export default {
                     await fileManager.writeBase64File(tempFilePath, downloadedMedia.data);
 
                     const result = await megaService.uploadFile(tempFilePath, remoteFileName, userCredentials);
-                    return message.reply(`✅ File berhasil diupload ke akun Mega Anda!\nLink: ${result.link}`);
+                    return message.reply(` File berhasil diupload ke akun Mega Anda!\nLink: ${result.link}`);
                 } finally {
                     if (tempFilePath) await fileManager.deleteFile(tempFilePath);
                 }

@@ -23,7 +23,7 @@ export default {
             await welcomeManager.setWelcome(groupId, welcomeMessage);
 
             logger.info(`Pesan selamat datang untuk grup ${chat.name} (${groupId}) diatur oleh admin.`);
-            await message.reply(`✅ Pesan selamat datang telah diatur untuk grup ini: "${welcomeMessage}"`);
+            await message.reply(` Pesan selamat datang telah diatur untuk grup ini: "${welcomeMessage}"`);
 
         } catch (error) {
             logger.error(`Error pada perintah /setwelcome:`, error);

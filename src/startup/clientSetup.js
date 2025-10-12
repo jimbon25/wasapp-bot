@@ -22,7 +22,7 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
     });
 
     client.on('ready', () => {
-        logger.info('WhatsApp bot is ready and online! ✅');
+        logger.info('WhatsApp bot is ready and online!');
     });
 
     client.on('auth_failure', (error) => {

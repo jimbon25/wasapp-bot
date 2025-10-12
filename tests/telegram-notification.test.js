@@ -41,7 +41,7 @@ async function testTelegramNotifications() {
         await logger.error(longMessage);
         console.log('✓ Sent long message\n');
 
-        console.log('✅ All test messages sent successfully!');
+        console.log(' All test messages sent successfully!');
         console.log('Please check your Telegram chat/group to verify the notifications.');
 
     } catch (error) {
