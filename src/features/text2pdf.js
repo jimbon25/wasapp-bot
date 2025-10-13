@@ -1,13 +1,9 @@
 import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import pkg from 'whatsapp-web.js';
 const { MessageMedia } = pkg;
 import logger from '../utils/common/logger.js';
 import pdfService from '../services/pdfServices/pdfService.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import fileManager, { FILE_TYPES } from '../utils/fileManagement/fileManager.js';
 
 export default {
     name: 'text2pdf',
@@ -15,17 +11,16 @@ export default {
     usage: '/text2pdf <teks>',
     
     async execute(message, args) {
+        const timestamp = new Date().getTime();
+        const tempTextFile = fileManager.getPath(FILE_TYPES.TEMP, `text_${timestamp}.txt`);
+        const outputPdfFile = fileManager.getPath(FILE_TYPES.TEMP, `text_${timestamp}.pdf`);
+
         try {
             if (args.length === 0) {
                 return message.reply('⚠️ Mohon berikan teks yang ingin dikonversi ke PDF.\n\nContoh: /text2pdf Ini adalah contoh teks');
             }
 
             const text = args.join(' ');
-
-            const timestamp = new Date().getTime();
-            const tempDir = path.join(__dirname, '../../temp');
-            const tempTextFile = path.join(tempDir, `text_${timestamp}.txt`);
-            const outputPdfFile = path.join(tempDir, `text_${timestamp}.pdf`);
 
             await fs.writeFile(tempTextFile, text, 'utf8');
 
@@ -58,7 +53,7 @@ export default {
                     fs.unlink(outputPdfFile).catch(() => {})
                 ]);
             } catch (cleanupError) {
-                logger.warn('Error cleaning up temporary files:', cleanupError);
+                logger.warn('Error cleaning up temporary files after error:', cleanupError);
             }
         }
     }

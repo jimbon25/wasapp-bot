@@ -1,23 +1,9 @@
 import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import pkg from 'whatsapp-web.js';
 import pdfService from '../services/pdfServices/pdfService.js';
 import logger from '../utils/common/logger.js';
+import fileManager, { FILE_TYPES } from '../utils/fileManagement/fileManager.js';
 const { MessageMedia } = pkg;
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-if (!fs.existsSync) {
-    const syncFs = await import('fs');
-    fs.existsSync = syncFs.existsSync;
-    fs.mkdirSync = syncFs.mkdirSync;
-}
-
-const TEMP_DIR = path.join(__dirname, '../../temp');
-if (!fs.existsSync(TEMP_DIR)) {
-    fs.mkdirSync(TEMP_DIR, { recursive: true });
-}
 
 /**
  * Handles the core logic of converting an image to PDF and sending it.
@@ -32,7 +18,7 @@ async function convertAndSendPdf(msg, media) {
 
     await msg.reply('⏳ Sedang memproses gambar ke PDF...');
 
-    const imagePath = path.join(TEMP_DIR, `${Date.now()}.${media.mimetype.split('/')[1] || 'png'}`);
+    const imagePath = fileManager.getPath(FILE_TYPES.TEMP, `${Date.now()}.${media.mimetype.split('/')[1] || 'png'}`);
     let pdfPath;
 
     try {

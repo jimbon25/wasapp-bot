@@ -36,7 +36,7 @@ class SessionManager {
 
     async cleanSession(clientId = 'default-session') {
         try {
-            const sessionPath = path.join(this.sessionsDir, clientId);
+            const sessionPath = path.join(this.sessionsDir, `session-${clientId}`);
             if (fs.existsSync(sessionPath)) {
                 logger.info(`Cleaning session directory: ${sessionPath}`);
                 await fs.promises.rm(sessionPath, { recursive: true });
@@ -77,7 +77,7 @@ class SessionManager {
 
     async backupSession(clientId = 'default-session') {
         try {
-            const sessionPath = path.join('.wwebjs_auth', `session-${clientId}`);
+            const sessionPath = path.join(this.sessionsDir, `session-${clientId}`);
             if (!fs.existsSync(sessionPath)) {
                 logger.warn(`No session found for client ${clientId}`);
                 return false;
@@ -181,7 +181,8 @@ class SessionManager {
 
             const client = new Client({
                 authStrategy: new LocalAuth({
-                    clientId: 'default-session'
+                    clientId: 'default-session',
+                    dataPath: this.sessionsDir
                 }),
                 puppeteer: puppeteerOptions,
                 qrMaxRetries: 3,

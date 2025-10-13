@@ -13,18 +13,12 @@ const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+import fileManager, { FILE_TYPES } from '../../utils/fileManagement/fileManager.js';
+
 class PDFService {
     constructor() {
         this.cacheManager = cacheManager;
         this.queueManager = messageQueueManager;
-        this.tempDir = path.join(__dirname, '../../temp');
-        this.ensureTempDir();
-    }
-
-    ensureTempDir() {
-        if (!fs.existsSync(this.tempDir)) {
-            fs.mkdirSync(this.tempDir, { recursive: true });
-        }
     }
 
     async convertToPdf(inputFile, outputFile, options = {}) {
@@ -222,7 +216,7 @@ class PDFService {
             margin
         });
 
-        const outputPath = path.join(this.tempDir, `${Date.now()}.pdf`);
+        const outputPath = fileManager.getPath(FILE_TYPES.TEMP, `${Date.now()}.pdf`);
         const writeStream = fs.createWriteStream(outputPath);
         doc.pipe(writeStream);
 
