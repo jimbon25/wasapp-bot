@@ -222,3 +222,24 @@ Untuk informasi lebih detail mengenai setiap aspek bot, silakan kunjungi dokumen
 
 Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubleshooting](docs/DOKUMENTASI_LENGKAP.md#6-troubleshooting).
 
+## Changelog
+
+### Perubahan Terbaru
+
+#### Fitur Baru (Features)
+
+*   **Pembatalan Auto-Upload**: Menambahkan perintah baru `/upload cancel`. Admin sekarang dapat membatalkan sesi pengumpulan media untuk fitur `AUTO_UPLOAD` sebelum bot mengirimkan prompt konfirmasi.
+
+#### Perubahan & Peningkatan (Changes & Improvements)
+
+*   **Sistem Batch Auto-Upload Menjadi Milik Grup**:
+    *   Fitur `AUTO_UPLOAD` sekarang mengumpulkan file media yang dikirim oleh **siapa saja** di dalam grup.
+    *   Pesan konfirmasi upload sekarang dikirim sebagai **pesan baru** ke grup, sehingga bisa direspons oleh admin mana pun.
+
+#### Perbaikan Bug (Fixes)
+
+*   **Perintah Admin pada Batch**: Memperbaiki bug di mana admin tidak dapat menjalankan perintah pada batch media yang dimulai oleh member biasa.
+
+#### Dokumentasi (Documentation)
+
+*   Memperbarui `docs/AUTO_UPLOAD.md` untuk mencerminkan alur kerja baru dari fitur `AUTO_UPLOAD`.

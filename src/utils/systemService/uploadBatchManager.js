@@ -1,12 +1,11 @@
 const activeUploadBatches = new Map();
 
 /**
- * Creates a unique key for a user in a specific group.
+ * Creates a unique key for a group's upload batch.
  * @param {string} groupId - The group ID.
- * @param {string} senderId - The sender's ID.
- * @returns {string} The unique batch key.
+ * @returns {string} The unique batch key for the group.
  */
-export const createBatchKey = (groupId, senderId) => `${groupId}:${senderId}`;
+export const createBatchKey = (groupId) => groupId;
 
 /**
  * Gets the active batch for a given key.

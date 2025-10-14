@@ -53,51 +53,44 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
             const validationResult = await securityManager.validateAndQueueMessage(
                 message,
                 async () => {
-                    // New Proactive AI Logic
                     const shouldTrigger = await proactiveAiHandler.shouldTrigger(message);
                     if (shouldTrigger) {
                         const response = await aiHandler.handleMessage(message.from, message.body, CHAT_MODES.PROACTIVE);
                         await message.reply(response);
-                        return; // Stop further processing
+                        return;
                     }
 
-                    // Auto Upload Feature Detection (with Batching)
                     if (message.hasMedia && !message.body.startsWith('/') && chat.isGroup && config.app.autoUpload.enabled && config.app.autoUpload.groupIds.includes(chat.id._serialized)) {
-                        const batchKey = uploadBatchManager.createBatchKey(groupId, senderId);
+                        const batchKey = uploadBatchManager.createBatchKey(groupId); // Use group-based key
                         const batch = uploadBatchManager.getBatch(batchKey) || { messages: [], timer: null };
 
-                        // If a timer is already running, clear it.
                         if (batch.timer) {
                             clearTimeout(batch.timer);
                         }
 
-                        // Add the new message to the batch.
                         batch.messages.push(message);
 
-                        // Set a new timer.
-                        batch.timer = setTimeout(() => {
+                        batch.timer = setTimeout(async () => {
                             const finalBatch = uploadBatchManager.getBatch(batchKey);
-                            if (finalBatch) {
+                            if (finalBatch && finalBatch.messages.length > 0) {
                                 const fileCount = finalBatch.messages.length;
                                 const s = fileCount > 1 ? 's' : '';
-                                const replyText = `Saya mendeteksi ada ${fileCount} file${s} media. Balas pesan *ini* untuk menyimpan semuanya:
-
-/upload drive
-/upload mega`;
+                                const replyText = `Mendeteksi ada ${fileCount} file${s} media dari anggota grup. Admin dapat membalas pesan *ini* untuk menyimpan semuanya:\n\n/upload drive\n/upload mega\n\nAtau ketik /upload cancel untuk membatalkan.`
                                 
-                                // Reply to the first message of the batch to establish a reply chain.
-                                finalBatch.messages[0].reply(replyText);
-                                logger.info(`Auto-upload: Prompted admin for a batch of ${fileCount} file(s) in group ${chat.name}.`);
+                                try {
+                                    await chat.sendMessage(replyText);
+                                    logger.info(`Auto-upload: Sent group-wide prompt for a batch of ${fileCount} file(s) in group ${chat.name}.`);
+                                } catch (e) {
+                                    logger.error('Failed to send auto-upload prompt message:', e);
+                                }
                             }
                         }, config.app.autoUpload.debounceSeconds * 1000);
 
-                        // Save the updated batch state.
                         uploadBatchManager.setBatch(batchKey, batch);
                         
-                        return; // Stop further processing for this media message.
+                        return;
                     }
 
-                    // Existing Logic
                     if (message.location) {
                         const mapsCommand = commandHandler.commands.get('maps');
                         if (mapsCommand) {
