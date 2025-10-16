@@ -28,12 +28,29 @@ const config = {
       retryDelay: parseInt(process.env.GOOGLE_DRIVE_RETRY_DELAY, 10) || 1000
     },
     gmail: {
-      notificationEnabled: process.env.GMAIL_NOTIFICATION_ENABLED === 'true',
-      targetNumbers: (process.env.GMAIL_TARGET_NUMBERS || '').split(','),
+      enabled: process.env.GMAIL_ENABLED === 'true',
       pollingInterval: parseInt(process.env.GMAIL_POLLING_INTERVAL_SECONDS, 10) || 60,
-      credentialsPath: process.env.GMAIL_CREDENTIALS_PATH || join(__dirname, './data/credentials/credentials-gmail.json'),
-      tokenPath: process.env.GMAIL_TOKEN_PATH || join(__dirname, './data/credentials/token-gmail.json'),
-      processedLabel: process.env.GMAIL_PROCESSED_LABEL || 'Notif-Bot',
+      accounts: (() => {
+        const accounts = [];
+        for (let i = 1; i <= 5; i++) { // Allow up to 5 accounts
+          const name = process.env[`GMAIL_ACCOUNT_${i}_NAME`];
+          const credentialsPath = process.env[`GMAIL_ACCOUNT_${i}_CREDENTIALS_PATH`];
+          const tokenPath = process.env[`GMAIL_ACCOUNT_${i}_TOKEN_PATH`];
+
+          if (name && credentialsPath && tokenPath) {
+            accounts.push({
+              name,
+              credentialsPath,
+              tokenPath,
+              targetNumbers: (process.env[`GMAIL_ACCOUNT_${i}_TARGET_NUMBERS`] || '').split(',').filter(n => n),
+              processedLabel: process.env[`GMAIL_ACCOUNT_${i}_PROCESSED_LABEL`] || `Wabot-Notif-${name.replace(/\s+/g, '')}`,
+            });
+          } else {
+            break; 
+          }
+        }
+        return accounts;
+      })(),
     },
     jikan: {
       baseUrl: process.env.JIKAN_API_URL || 'https://api.jikan.moe/v4',
