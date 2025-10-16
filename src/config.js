@@ -27,6 +27,13 @@ const config = {
       maxRetries: parseInt(process.env.GOOGLE_DRIVE_MAX_RETRIES, 10) || 3,
       retryDelay: parseInt(process.env.GOOGLE_DRIVE_RETRY_DELAY, 10) || 1000
     },
+    gmail: {
+      notificationEnabled: process.env.GMAIL_NOTIFICATION_ENABLED === 'true',
+      targetNumbers: (process.env.GMAIL_TARGET_NUMBERS || '').split(','),
+      pollingInterval: parseInt(process.env.GMAIL_POLLING_INTERVAL_SECONDS, 10) || 60,
+      credentialsPath: process.env.GMAIL_CREDENTIALS_PATH || join(__dirname, './data/credentials/credentials-gmail.json'),
+      tokenPath: process.env.GMAIL_TOKEN_PATH || join(__dirname, './data/credentials/token-gmail.json'),
+    },
     jikan: {
       baseUrl: process.env.JIKAN_API_URL || 'https://api.jikan.moe/v4',
       cache: {

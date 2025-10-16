@@ -7,6 +7,49 @@ import moderationService from '../services/moderationService.js';
 import proactiveAiHandler from '../handlers/proactiveAiHandler.js';
 import { CHAT_MODES } from '../utils/common/prompts.js';
 import * as uploadBatchManager from '../utils/systemService/uploadBatchManager.js';
+import gmailService from '../services/notificationServices/gmailService.js';
+
+// Gmail Polling Function
+async function startGmailPolling(client) {
+    if (!config.apis.gmail.notificationEnabled) {
+        logger.info('Gmail notification service is disabled.');
+        return;
+    }
+
+    logger.info(`Starting Gmail polling service. Interval: ${config.apis.gmail.pollingInterval} seconds.`);
+
+    setInterval(async () => {
+        await gmailService.initialize();
+        if (!gmailService.initialized) {
+            logger.warn('Gmail service not ready, skipping poll. Please run setup-gmail.js and restart.');
+            return;
+        }
+
+        const unreadEmails = await gmailService.getUnreadEmails();
+        if (unreadEmails.length > 0) {
+            logger.info(`Found ${unreadEmails.length} unread emails.`);
+        }
+
+        for (const message of unreadEmails) {
+            const details = await gmailService.getEmailDetails(message.id);
+            if (details) {
+                const notifMessage = `📧 Notifikasi Gmail Baru 📧\n\n*Dari:* ${details.from}\n*Subjek:* ${details.subject}\n\n*Cuplikan:*\n${details.snippet}`;
+
+                for (const targetNumber of config.apis.gmail.targetNumbers) {
+                    if (targetNumber) {
+                        try {
+                            await client.sendMessage(targetNumber, notifMessage);
+                            logger.info(`Sent Gmail notification to ${targetNumber}`);
+                        } catch (error) {
+                            logger.error(`Failed to send Gmail notification to ${targetNumber}:`, error);
+                        }
+                    }
+                }
+                await gmailService.markAsRead(details.id);
+            }
+        }
+    }, config.apis.gmail.pollingInterval * 1000);
+}
 
 /**
  * Sets up event listeners for the WhatsApp client.
@@ -23,6 +66,8 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
 
     client.on('ready', () => {
         logger.info('WhatsApp bot is ready and online!');
+        // Start Gmail polling when the client is ready
+        startGmailPolling(client);
     });
 
     client.on('auth_failure', (error) => {
@@ -158,9 +203,7 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
                     .map(id => `@${id.split('@')[0]}`)
                     .join(', ');
 
-                await chat.sendMessage(`Selamat datang ${newMembers}!
-
-${welcomeMessage}`);
+                await chat.sendMessage(`Selamat datang ${newMembers}!\n\n${welcomeMessage}`);
                 logger.info(`Sent welcome message to ${newMembers} in group ${chat.name} (${groupId})`);
             }
         } catch (error) {
