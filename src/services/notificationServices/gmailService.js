@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import fs from 'fs/promises';
+import path from 'path';
 import config from '../../config.js';
 import logger from '../../utils/common/logger.js';
 
@@ -8,6 +9,7 @@ class GmailService {
         this.config = config.apis.gmail;
         this.gmail = null;
         this.initialized = false;
+        this.processedLabelId = null;
     }
 
     async initialize() {
@@ -22,24 +24,56 @@ class GmailService {
             oAuth2Client.setCredentials(token);
 
             this.gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+            await this._ensureLabelExists();
+
             this.initialized = true;
-            logger.info('Gmail service initialized successfully');
+            logger.info('Gmail service initialized successfully with processed label.');
         } catch (error) {
             logger.error('Failed to initialize Gmail service. Make sure credentials and token files exist.', error);
             this.initialized = false;
         }
     }
 
+    async _ensureLabelExists() {
+        const labelName = this.config.processedLabel;
+        try {
+            const res = await this.gmail.users.labels.list({ userId: 'me' });
+            const labels = res.data.labels;
+            const existingLabel = labels.find(label => label.name === labelName);
+
+            if (existingLabel) {
+                this.processedLabelId = existingLabel.id;
+                logger.info(`Found existing Gmail label: '${labelName}' (ID: ${this.processedLabelId})`);
+            } else {
+                logger.info(`Label '${labelName}' not found, creating it...`);
+                const newLabel = await this.gmail.users.labels.create({
+                    userId: 'me',
+                    resource: {
+                        name: labelName,
+                        labelListVisibility: 'labelShow',
+                        messageListVisibility: 'show',
+                    },
+                });
+                this.processedLabelId = newLabel.data.id;
+                logger.info(`Successfully created Gmail label: '${labelName}' (ID: ${this.processedLabelId})`);
+            }
+        } catch (error) {
+            logger.error(`Failed to ensure Gmail label '${labelName}' exists.`, error);
+            throw error; // Re-throw to prevent service from initializing incorrectly
+        }
+    }
+
     async getUnreadEmails() {
-        if (!this.initialized) {
-            logger.warn('Gmail service not initialized. Cannot fetch emails.');
+        if (!this.initialized || !this.processedLabelId) {
+            logger.warn('Gmail service not ready or label not configured. Cannot fetch emails.');
             return [];
         }
 
         try {
+            const query = `is:unread -label:${this.config.processedLabel}`;
             const response = await this.gmail.users.messages.list({
                 userId: 'me',
-                q: 'is:unread',
+                q: query,
             });
             return response.data.messages || [];
         } catch (error) {
@@ -74,20 +108,20 @@ class GmailService {
         }
     }
 
-    async markAsRead(messageId) {
-        if (!this.initialized) return;
+    async applyProcessedLabel(messageId) {
+        if (!this.initialized || !this.processedLabelId) return;
 
         try {
             await this.gmail.users.messages.modify({
                 userId: 'me',
                 id: messageId,
                 resource: {
-                    removeLabelIds: ['UNREAD'],
+                    addLabelIds: [this.processedLabelId],
                 },
             });
-            logger.info(`Marked email ${messageId} as read.`);
+            logger.info(`Applied label to email ${messageId}.`);
         } catch (error) {
-            logger.error(`Error marking email ${messageId} as read:`, error);
+            logger.error(`Error applying label to email ${messageId}:`, error);
         }
     }
 }

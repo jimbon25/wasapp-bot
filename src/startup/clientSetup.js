@@ -33,7 +33,7 @@ async function startGmailPolling(client) {
         for (const message of unreadEmails) {
             const details = await gmailService.getEmailDetails(message.id);
             if (details) {
-                const notifMessage = `📧 Notifikasi Gmail Baru 📧\n\n*Dari:* ${details.from}\n*Subjek:* ${details.subject}\n\n*Cuplikan:*\n${details.snippet}`;
+                const notifMessage = `📧 Notifikasi Gmail Baru\n\n*Dari:* ${details.from}\n*Subjek:* ${details.subject}\n\n*Pesan:*\n${details.snippet}`;
 
                 for (const targetNumber of config.apis.gmail.targetNumbers) {
                     if (targetNumber) {
@@ -45,7 +45,7 @@ async function startGmailPolling(client) {
                         }
                     }
                 }
-                await gmailService.markAsRead(details.id);
+                await gmailService.applyProcessedLabel(details.id);
             }
         }
     }, config.apis.gmail.pollingInterval * 1000);

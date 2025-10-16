@@ -33,6 +33,7 @@ const config = {
       pollingInterval: parseInt(process.env.GMAIL_POLLING_INTERVAL_SECONDS, 10) || 60,
       credentialsPath: process.env.GMAIL_CREDENTIALS_PATH || join(__dirname, './data/credentials/credentials-gmail.json'),
       tokenPath: process.env.GMAIL_TOKEN_PATH || join(__dirname, './data/credentials/token-gmail.json'),
+      processedLabel: process.env.GMAIL_PROCESSED_LABEL || 'Notif-Bot',
     },
     jikan: {
       baseUrl: process.env.JIKAN_API_URL || 'https://api.jikan.moe/v4',

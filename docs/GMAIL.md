@@ -16,7 +16,7 @@ Dokumen ini menjelaskan cara mengkonfigurasi dan menggunakan fitur notifikasi em
 
 Fitur ini memungkinkan bot untuk secara otomatis memeriksa akun Gmail tertentu untuk email yang belum dibaca. Ketika email baru ditemukan, bot akan mengirimkan notifikasi yang berisi informasi dasar (pengirim, subjek, dan cuplikan) ke satu atau beberapa nomor WhatsApp yang telah ditentukan.
 
-Untuk mencegah notifikasi berulang, bot akan secara otomatis menandai email sebagai "sudah dibaca" setelah notifikasi berhasil dikirim.
+Untuk mencegah notifikasi berulang, bot akan secara otomatis **memberikan sebuah label (stempel)** ke email tersebut setelah notifikasi berhasil dikirim. Dengan cara ini, email akan tetap dalam status "belum dibaca" di inbox Anda, namun tidak akan dinotifikasikan lagi oleh bot.
 
 ---
 
@@ -63,11 +63,13 @@ GMAIL_TARGET_NUMBERS=62812xxxx@c.us,62857xxxx@c.us
 GMAIL_POLLING_INTERVAL_SECONDS=60
 GMAIL_CREDENTIALS_PATH=src/data/credentials/credentials-gmail.json
 GMAIL_TOKEN_PATH=src/data/credentials/token-gmail.json
+GMAIL_PROCESSED_LABEL=Notif-Bot
 ```
 
 -   `GMAIL_NOTIFICATION_ENABLED`: Atur ke `true` untuk mengaktifkan fitur.
 -   `GMAIL_TARGET_NUMBERS`: Isi dengan nomor WhatsApp tujuan notifikasi. Jika lebih dari satu, pisahkan dengan koma.
 -   `GMAIL_POLLING_INTERVAL_SECONDS`: Seberapa sering bot memeriksa email baru (dalam detik). `60` berarti setiap 1 menit.
+-   `GMAIL_PROCESSED_LABEL`: Nama label yang akan digunakan bot sebagai "stempel" untuk menandai email yang sudah dinotifikasikan. Anda tidak perlu membuat label ini manual, bot akan membuatnya secara otomatis jika belum ada.
 -   `GMAIL_CREDENTIALS_PATH` dan `GMAIL_TOKEN_PATH`: Sebaiknya biarkan default, pastikan path ini sesuai dengan struktur proyek Anda.
 
 ---
@@ -100,12 +102,13 @@ Setelah `credentials-gmail.json` ditempatkan dan file `.env` dikonfigurasi, jala
 ## 5. Alur Kerja Teknis
 
 1.  Saat bot dimulai, ia akan memeriksa apakah `GMAIL_NOTIFICATION_ENABLED` aktif.
-2.  Jika aktif, bot akan memulai *polling* (pemeriksaan berkala) setiap `GMAIL_POLLING_INTERVAL_SECONDS`.
-3.  Setiap kali pemeriksaan, bot akan:
-    a.  Meminta daftar email dengan label `UNREAD`.
+2.  Jika aktif, bot akan memastikan label yang didefinisikan di `GMAIL_PROCESSED_LABEL` ada di akun Gmail Anda. Jika tidak ada, bot akan membuatnya secara otomatis.
+3.  Bot akan memulai *polling* (pemeriksaan berkala) setiap `GMAIL_POLLING_INTERVAL_SECONDS`.
+4.  Setiap kali pemeriksaan, bot akan:
+    a.  Meminta daftar email dengan kriteria: `is:unread` DAN `TIDAK memiliki label` yang ditentukan.
     b.  Untuk setiap email, bot mengambil detail pengirim, subjek, dan cuplikan.
     c.  Mengirim notifikasi ke semua nomor di `GMAIL_TARGET_NUMBERS`.
-    d.  **Menghapus label `UNREAD`** dari email tersebut untuk memastikan tidak ada notifikasi ganda.
+    d.  **Memberikan label (stempel)** ke email tersebut untuk memastikan tidak ada notifikasi ganda di masa depan.
 
 ---
 
@@ -120,5 +123,5 @@ Setelah `credentials-gmail.json` ditempatkan dan file `.env` dikonfigurasi, jala
 -   **Error saat menjalankan `node scripts/setup-gmail.js`?**
     -   Pastikan file `credentials-gmail.json` sudah ada di `src/data/credentials/` sebelum menjalankan skrip.
 
--   **Email di aplikasi Gmail langsung terbaca?**
-    -   Ini adalah perilaku normal. Bot menandai email sebagai sudah dibaca untuk mencegah pengiriman notifikasi yang sama berulang kali. Ini menandakan fitur berjalan dengan benar.
+-   **Kenapa ada label baru (misal: "Notif-Bot") di akun Gmail saya?**
+    -   Ini adalah perilaku normal dari sistem "stempel". Bot membuat dan menggunakan label ini untuk menandai email mana yang sudah dikirim notifikasinya, agar tidak mengirim notifikasi yang sama berulang kali. Email Anda tetap dalam status `unread`.
