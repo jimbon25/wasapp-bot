@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/pubsub": "^5.2.0",
     "@google/generative-ai": "^0.24.1",
     "@web-std/fetch": "^4.1.0",
     "@web-std/form-data": "^3.1.0",

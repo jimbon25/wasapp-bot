@@ -74,8 +74,22 @@ async function authorizeAccount(account) {
                 
                 console.log(`Connection successful! Email address: ${response.data.emailAddress}`);
                 console.log(`Bot is now ready to use the "${account.name}" Gmail account.`);
+
+                // --- LANGKAH BARU: Mendaftarkan Push Notification ---
+                console.log(`
+Registering for push notifications for ${response.data.emailAddress}...`);
+                await gmail.users.watch({
+                    userId: 'me',
+                    resource: {
+                        labelIds: ['INBOX'],
+                        topicName: config.apis.gmail.topicName
+                    }
+                });
+                console.log('Successfully registered for push notifications. The bot will now receive real-time updates.');
+                // --- AKHIR LANGKAH BARU ---
+
             } catch (error) {
-                console.error('Error retrieving access token:', error.response ? error.response.data : error.message);
+                console.error('Error during post-authorization setup:', error.response ? error.response.data : error.message);
             }
         });
     } catch (error) {

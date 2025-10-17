@@ -26,9 +26,8 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
 
     client.on('ready', async () => {
         logger.info('WhatsApp bot is ready and online!');
-        // Initialize and start the multi-account Gmail polling service
-        await gmailService.initialize();
-        gmailService.startPolling(client);
+        // Initialize the multi-account Gmail service
+        await gmailService.initialize(client);
     });
 
     client.on('auth_failure', (error) => {

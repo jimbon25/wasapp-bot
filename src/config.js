@@ -30,6 +30,9 @@ const config = {
     gmail: {
       enabled: process.env.GMAIL_ENABLED === 'true',
       pollingInterval: parseInt(process.env.GMAIL_POLLING_INTERVAL_SECONDS, 10) || 60,
+      projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+      topicName: process.env.GMAIL_PUBSUB_TOPIC_NAME,
+      subscriptionName: process.env.GMAIL_PUBSUB_SUBSCRIPTION_NAME,
       accounts: (() => {
         const accounts = [];
         for (let i = 1; i <= 5; i++) { // Allow up to 5 accounts

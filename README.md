@@ -46,6 +46,9 @@ Bot WhatsApp multifungsi dengan fitur AI chat (Gemini), Instagram downloader, tr
 -   **Manajemen File Otomatis**: Membersihkan file temporary secara otomatis.
 -   **Notifikasi Telegram**: Mengirim notifikasi ke admin jika terjadi error kritis.
 
+### Notifikasi
+-   **Notifikasi Gmail Real-time**: Menerima pemberitahuan instan untuk email baru dari beberapa akun Gmail melalui *push notifications* Google Pub/Sub, lengkap dengan *direct link* ke pesan.
+
 ## Tech Stack
 -   **Node.js**: Runtime JavaScript
 -   **whatsapp-web.js**: Library untuk interaksi WhatsApp Web
@@ -232,6 +235,7 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Perubahan & Peningkatan (Changes & Improvements)
 
+*   **Notifikasi Gmail Real-time**: Fitur notifikasi Gmail dirombak total dari sistem *polling* menjadi *push notifications* menggunakan Google Cloud Pub/Sub. Kini mendukung notifikasi instan dari multi-akun Gmail dan menyertakan *direct link* ke pesan email. ([Lihat Dokumentasi Lengkap](./docs/GMAIL.md))
 *   **Sistem Batch Auto-Upload Menjadi Milik Grup**:
     *   Fitur `AUTO_UPLOAD` sekarang mengumpulkan file media yang dikirim oleh **siapa saja** di dalam grup.
     *   Pesan konfirmasi upload sekarang dikirim sebagai **pesan baru** ke grup, sehingga bisa direspons oleh admin mana pun.
@@ -239,7 +243,3 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 #### Perbaikan Bug (Fixes)
 
 *   **Perintah Admin pada Batch**: Memperbaiki bug di mana admin tidak dapat menjalankan perintah pada batch media yang dimulai oleh member biasa.
-
-#### Dokumentasi (Documentation)
-
-*   Memperbarui `docs/AUTO_UPLOAD.md` untuk mencerminkan alur kerja baru dari fitur `AUTO_UPLOAD`.

@@ -1,17 +1,60 @@
 import { google } from 'googleapis';
 import fs from 'fs/promises';
+import { PubSub } from '@google-cloud/pubsub';
 import config from '../../config.js';
 import logger from '../../utils/common/logger.js';
+import { redisManager } from '../../utils/redis/index.js';
+
+const GMAIL_STATE_KEY = 'gmail:notifications:enabled';
+const GMAIL_HISTORY_ID_KEY_PREFIX = 'gmail:historyId:';
 
 class GmailService {
     constructor() {
         this.config = config.apis.gmail;
-        this.clients = new Map(); // Store multiple clients
+        this.clients = new Map(); // Store multiple clients, keyed by email address
         this.initialized = false;
-        this.recentlyProcessed = new Set(); // Cache for recently processed email IDs
+        this.pubSubClient = null;
+        this.subscription = null;
     }
 
-    async initialize() {
+    //### DYNAMIC STATUS METHODS ###
+
+    async setPollingStatus(enabled) {
+        const client = await redisManager.getClient();
+        if (!client) {
+            logger.warn('Redis client not available. Cannot set Gmail polling status.');
+            return;
+        }
+        await client.set(GMAIL_STATE_KEY, enabled ? 'true' : 'false');
+    }
+
+    async isPollingEnabled() {
+        const client = await redisManager.getClient();
+        if (!client) {
+            logger.warn('Redis client not available. Falling back to .env config for Gmail status.');
+            return this.config.enabled;
+        }
+        const status = await client.get(GMAIL_STATE_KEY);
+        if (status === null) {
+            return this.config.enabled;
+        }
+        return status === 'true';
+    }
+
+    async _initializeState() {
+        const client = await redisManager.getClient();
+        if (!client) return;
+
+        const status = await client.get(GMAIL_STATE_KEY);
+        if (status === null) {
+            logger.info(`Initializing Gmail state in Redis from .env config (GMAIL_ENABLED=${this.config.enabled})`);
+            await this.setPollingStatus(this.config.enabled);
+        }
+    }
+
+    //### CORE SERVICE METHODS ###
+
+    async initialize(whatsappClient) {
         if (this.initialized || !this.config.enabled) {
             return;
         }
@@ -28,16 +71,20 @@ class GmailService {
                 oAuth2Client.setCredentials(token);
 
                 const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
-                const processedLabelId = await this._ensureLabelExists(gmail, account.processedLabel);
+                const profile = await gmail.users.getProfile({ userId: 'me' });
+                const emailAddress = profile.data.emailAddress;
 
-                this.clients.set(account.name, {
+                const { id: processedLabelId, name: processedLabelName } = await this._ensureLabelExists(gmail, account.processedLabel);
+
+                this.clients.set(emailAddress, {
                     gmail,
                     processedLabelId,
+                    processedLabelName,
                     targetNumbers: account.targetNumbers,
                     name: account.name
                 });
 
-                logger.info(`Gmail account "${account.name}" initialized successfully.`);
+                logger.info(`Gmail account "${account.name}" (${emailAddress}) initialized successfully.`);
             } catch (error) {
                 logger.error(`Failed to initialize Gmail account "${account.name}". Please check its configuration and token file.`, error);
             }
@@ -45,6 +92,8 @@ class GmailService {
 
         if (this.clients.size > 0) {
             this.initialized = true;
+            await this._initializeState();
+            this.startListening(whatsappClient); // Start listening to Pub/Sub
             logger.info('Gmail service initialization complete.');
         }
     }
@@ -55,11 +104,9 @@ class GmailService {
             const existingLabel = res.data.labels.find(label => label.name === labelName);
 
             if (existingLabel) {
-                logger.info(`Found existing Gmail label: '${labelName}' (ID: ${existingLabel.id})`);
-                return existingLabel.id;
+                return { id: existingLabel.id, name: existingLabel.name };
             }
             
-            logger.info(`Label '${labelName}' not found, creating it...`);
             const newLabel = await gmail.users.labels.create({
                 userId: 'me',
                 resource: {
@@ -68,8 +115,7 @@ class GmailService {
                     messageListVisibility: 'show',
                 },
             });
-            logger.info(`Successfully created Gmail label: '${labelName}' (ID: ${newLabel.data.id})`);
-            return newLabel.data.id;
+            return { id: newLabel.data.id, name: newLabel.data.name };
 
         } catch (error) {
             logger.error(`Failed to ensure Gmail label '${labelName}' exists.`, error);
@@ -77,88 +123,125 @@ class GmailService {
         }
     }
 
-    async startPolling(whatsappClient) {
-        if (!this.initialized) {
-            logger.warn('Gmail service is not initialized or no accounts are configured. Polling will not start.');
+    startListening(whatsappClient) {
+        if (!this.initialized || !this.config.subscriptionName) {
+            logger.warn('Gmail push notifications not started: Service not initialized or subscription name not configured.');
             return;
         }
 
-        logger.info(`Starting Gmail polling service for ${this.clients.size} account(s). Interval: ${this.config.pollingInterval} seconds.`);
+        this.pubSubClient = new PubSub({ projectId: this.config.projectId });
+        this.subscription = this.pubSubClient.subscription(this.config.subscriptionName);
 
-        setInterval(async () => {
-            for (const [name, clientData] of this.clients.entries()) {
-                await this.checkAccountForEmails(clientData, whatsappClient);
-            }
-        }, this.config.pollingInterval * 1000);
-    }
+        const messageHandler = async message => {
+            logger.info(`Received Gmail push notification: ${message.id}`);
+            message.ack(); // Acknowledge immediately
 
-    async checkAccountForEmails(clientData, whatsappClient) {
-        try {
-            const unreadEmails = await this.getUnreadEmails(clientData);
-            if (unreadEmails.length > 0) {
-                logger.info(`Found ${unreadEmails.length} unread emails for account "${clientData.name}".`);
-            }
-
-            for (const message of unreadEmails) {
-                // Check local cache first to prevent re-processing due to propagation delay
-                if (this.recentlyProcessed.has(message.id)) {
-                    logger.info(`Skipping email ${message.id} for account "${clientData.name}" as it was recently processed.`);
-                    continue;
+            try {
+                const pollingEnabled = await this.isPollingEnabled();
+                if (!pollingEnabled) {
+                    logger.info('Gmail notifications are disabled, skipping processing.');
+                    return;
                 }
 
-                const details = await this.getEmailDetails(clientData, message.id);
-                if (details) {
-                    const receivedDate = new Date(parseInt(details.internalDate));
-                    const timestamp = receivedDate.toLocaleString('id-ID', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short'
-                    });
+                const data = JSON.parse(message.data.toString());
+                const emailAddress = data.emailAddress;
+                const historyId = data.historyId;
 
-                    const notifMessage = `📧 *GMAIL NOTIFICATION* 📧\n` +
-                                     `━━━━━━━━━━━━━\n\n` +
-                                     `*Akun:* _${clientData.name}_\n` +
-                                     `*Waktu:* ${timestamp}\n\n` +
-                                     `*Dari:*\n${details.from}\n\n` +
-                                     `*Subjek:*\n${details.subject}\n\n` +
-                                     `*Pesan:*\n_${details.snippet}_\n\n` +
-                                     `━━━━━━━━━━━━━`;
+                const clientData = this.clients.get(emailAddress);
+                if (!clientData) {
+                    logger.warn(`Received notification for unknown email: ${emailAddress}`);
+                    return;
+                }
 
-                    // Add to local cache before sending
-                    this.recentlyProcessed.add(details.id);
-                    setTimeout(() => {
-                        this.recentlyProcessed.delete(details.id);
-                        logger.info(`Removed email ${details.id} from recently processed cache.`);
-                    }, 5 * 60 * 1000); // 5-minute cache lifetime
+                await this.processHistory(clientData, historyId, whatsappClient);
 
-                    for (const targetNumber of clientData.targetNumbers) {
-                        if (targetNumber) {
-                            try {
-                                await whatsappClient.sendMessage(targetNumber, notifMessage);
-                                logger.info(`Sent Gmail notification from "${clientData.name}" to ${targetNumber}`);
-                            } catch (error) {
-                                logger.error(`Failed to send Gmail notification to ${targetNumber}:`, error);
+            } catch (error) {
+                logger.error('Error processing Pub/Sub message:', error);
+            }
+        };
+
+        this.subscription.on('message', messageHandler);
+        this.subscription.on('error', error => {
+            logger.error('Gmail Pub/Sub subscription error:', error);
+        });
+
+        logger.info(`Listening for Gmail notifications on subscription: ${this.config.subscriptionName}`);
+    }
+
+    async processHistory(clientData, newHistoryId, whatsappClient) {
+        const redisClient = await redisManager.getClient();
+        const historyKey = `${GMAIL_HISTORY_ID_KEY_PREFIX}${clientData.name}`;
+        const startHistoryId = await redisClient.get(historyKey);
+
+        if (!startHistoryId) {
+            logger.warn(`No previous historyId found for ${clientData.name}. Storing current one and processing next time.`);
+            await redisClient.set(historyKey, newHistoryId);
+            return;
+        }
+
+        try {
+            const response = await clientData.gmail.users.history.list({
+                userId: 'me',
+                startHistoryId: startHistoryId,
+                historyTypes: ['messageAdded']
+            });
+
+            const history = response.data.history;
+            if (history && history.length > 0) {
+                for (const record of history) {
+                    if (record.messagesAdded) {
+                        for (const msg of record.messagesAdded) {
+                            // Check if the message is unread before processing
+                            const isUnread = msg.message.labelIds.includes('UNREAD');
+                            if (isUnread) {
+                                await this.sendNotificationForMessage(clientData, msg.message.id, whatsappClient);
                             }
                         }
                     }
-                    await this.applyProcessedLabel(clientData, details.id);
                 }
             }
+
+            await redisClient.set(historyKey, newHistoryId);
+
         } catch (error) {
-            logger.error(`Error polling emails for account "${clientData.name}":`, error);
+            logger.error(`Error processing history for ${clientData.name}:`, error);
         }
     }
 
-    async getUnreadEmails(clientData) {
+    async sendNotificationForMessage(clientData, messageId, whatsappClient) {
         try {
-            const query = `is:unread -label:"${clientData.processedLabelName}"`;
-            const response = await clientData.gmail.users.messages.list({
-                userId: 'me',
-                q: query,
-            });
-            return response.data.messages || [];
+            const details = await this.getEmailDetails(clientData, messageId);
+            if (!details) return;
+
+            const receivedDate = new Date(parseInt(details.internalDate));
+            const timestamp = receivedDate.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+
+            const notifMessage = `📧 *GMAIL NOTIFICATION* 📧\n` +
+                                 `━━━━━━━━━━━━━\n\n` +
+                                 `*Akun:* _${clientData.name}_\n` +
+                                 `*Waktu:* ${timestamp}\n\n` +
+                                 `*Dari:*
+${details.from}\n\n` +
+                                 `*Subjek:*
+${details.subject}\n\n` +
+                                 `*Pesan:*
+_${details.snippet}_\n\n` +
+                                 `*Lihat Pesan:* ${details.messageUrl}\n\n`;
+                                    ;
+            for (const targetNumber of clientData.targetNumbers) {
+                if (targetNumber) {
+                    try {
+                        await whatsappClient.sendMessage(targetNumber, notifMessage);
+                        logger.info(`Sent Gmail notification from "${clientData.name}" to ${targetNumber}`);
+                    } catch (error) {
+                        logger.error(`Failed to send Gmail notification to ${targetNumber}:`, error);
+                    }
+                }
+            }
+            await this.applyProcessedLabel(clientData, details.id);
+
         } catch (error) {
-            logger.error(`Error fetching unread emails for "${clientData.name}":`, error);
-            return [];
+            logger.error(`Error sending notification for message ${messageId}:`, error);
         }
     }
 
@@ -167,20 +250,21 @@ class GmailService {
             const response = await clientData.gmail.users.messages.get({
                 userId: 'me',
                 id: messageId,
+                format: 'metadata',
+                metadataHeaders: ['From', 'Subject']
             });
 
             const headers = response.data.payload.headers;
             const fromHeader = headers.find(h => h.name === 'From').value;
             const subjectHeader = headers.find(h => h.name === 'Subject').value;
-            const snippet = response.data.snippet;
-            const internalDate = response.data.internalDate;
 
             return {
                 id: messageId,
                 from: fromHeader,
                 subject: subjectHeader,
-                snippet: snippet,
-                internalDate: internalDate, // Add internalDate to the return object
+                snippet: response.data.snippet,
+                internalDate: response.data.internalDate,
+                messageUrl: `https://mail.google.com/mail/#all/${messageId}` // Tambahan baru
             };
         } catch (error) {
             logger.error(`Error getting details for email ${messageId} from "${clientData.name}":`, error);
@@ -195,7 +279,7 @@ class GmailService {
                 id: messageId,
                 resource: {
                     addLabelIds: [clientData.processedLabelId],
-                    removeLabelIds: ['UNREAD'] // Mark email as read
+                    removeLabelIds: ['UNREAD']
                 },
             });
             logger.info(`Applied label and marked as read for email ${messageId} for account "${clientData.name}".`);

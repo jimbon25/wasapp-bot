@@ -1,92 +1,145 @@
-# Panduan Fitur Notifikasi Gmail (Multi-Akun)
+# Panduan Fitur Notifikasi Gmail (Multi-Akun) - Push Notifications
 
-Dokumen ini menjelaskan cara mengkonfigurasi dan menggunakan fitur notifikasi email dari beberapa akun Gmail secara bersamaan.
+Dokumen ini menjelaskan cara mengkonfigurasi dan menggunakan fitur notifikasi email dari beberapa akun Gmail secara bersamaan menggunakan sistem *push notifications* real-time melalui Google Cloud Pub/Sub.
 
 ## Daftar Isi
-1.  [Konsep Utama](#1-konsep-utama)
-2.  [Langkah 1: Konfigurasi Google Cloud Console](#2-langkah-1-konfigurasi-google-cloud-console)
+1.  [Konsep Utama: Push Notifications](#1-konsep-utama-push-notifications)
+2.  [Langkah 1: Konfigurasi Google Cloud Console (Gmail API & Pub/Sub)](#2-langkah-1-konfigurasi-google-cloud-console-gmail-api--pubsub)
 3.  [Langkah 2: Konfigurasi Environment Bot (.env)](#3-langkah-2-konfigurasi-environment-bot-env)
-4.  [Langkah 3: Otorisasi Setiap Akun](#4-langkah-3-otorisasi-setiap-akun)
-5.  [Alur Kerja Teknis](#5-alur-kerja-teknis)
-6.  [Troubleshooting](#6-troubleshooting)
+4.  [Langkah 3: Otorisasi Setiap Akun & Registrasi Push](#4-langkah-3-otorisasi-setiap-akun--registrasi-push)
+5.  [Kontrol Dinamis (Perintah Admin)](#5-kontrol-dinamis-perintah-admin)
+6.  [Alur Kerja Teknis](#6-alur-kerja-teknis)
+7.  [Troubleshooting](#7-troubleshooting)
 
 ---
 
-## 1. Konsep Utama
+## 1. Konsep Utama: Push Notifications
 
-Fitur ini memungkinkan bot untuk secara otomatis memeriksa **beberapa akun Gmail** untuk email yang belum dibaca. Ketika email baru ditemukan di salah satu akun, bot akan mengirimkan notifikasi yang berisi informasi dasar (pengirim, subjek, cuplikan) ke nomor WhatsApp yang telah ditentukan **khusus untuk akun tersebut**.
+Fitur ini memungkinkan bot untuk secara otomatis memeriksa **beberapa akun Gmail** untuk email yang belum dibaca. Berbeda dengan metode *polling* (memeriksa secara berkala), bot kini menggunakan **Google Cloud Pub/Sub** untuk menerima *push notifications* secara real-time dari Gmail.
+
+Ketika email baru ditemukan di salah satu akun, Google akan mengirimkan notifikasi ke Pub/Sub, yang kemudian akan diterima oleh bot. Bot akan mengirimkan notifikasi yang berisi informasi dasar (pengirim, subjek, cuplikan) ke nomor WhatsApp yang telah ditentukan **khusus untuk akun tersebut**.
 
 Untuk mencegah notifikasi berulang secara permanen, bot akan melakukan dua tindakan pada email yang telah diproses:
 1.  **Menandai sebagai sudah dibaca** (menghapus label `UNREAD`).
 2.  **Memberikan label "stempel"** (contoh: `NotifBot-Pribadi`) sebagai penanda tambahan.
 
+**Keuntungan Push Notifications:**
+*   **Real-time:** Notifikasi dikirim hampir seketika setelah email diterima.
+*   **Sangat Efisien:** Mengurangi penggunaan kuota API dan sumber daya karena bot tidak perlu lagi melakukan panggilan API secara berkala.
+*   **Lebih Andal:** Mengurangi risiko email terlewat karena error koneksi sesaat.
+
 ---
 
-## 2. Langkah 1: Konfigurasi Google Cloud Console
+## 2. Langkah 1: Konfigurasi Google Cloud Console (Gmail API & Pub/Sub)
 
-Langkah-langkah di Google Cloud Console sebagian besar tetap sama.
+Untuk menggunakan fitur ini, Anda perlu mengkonfigurasi Gmail API dan Google Cloud Pub/Sub di Google Cloud Console Anda.
 
 1.  **Buat atau Pilih Proyek** di [Google Cloud Console](https://console.cloud.google.com/).
-2.  **Aktifkan Gmail API** melalui menu **APIs & Services > Library**.
+    *   Catat **Project ID** Anda (misalnya: `your-gcp-project-id`), Anda akan membutuhkannya nanti.
+
+2.  **Aktifkan Gmail API & Cloud Pub/Sub API**:
+    *   Di menu **APIs & Services > Library**:
+        *   Cari "Google Gmail API" dan klik **Enable**.
+        *   Cari "Cloud Pub/Sub API" dan klik **Enable**.
+
 3.  **Konfigurasi OAuth Consent Screen**:
-    *   Pilih **External**.
-    *   Isi nama aplikasi dan email.
-    *   Pada bagian **Test users**, klik **+ ADD USERS** dan tambahkan **semua alamat email Google** yang ingin Anda pantau. Jika Anda ingin memantau 3 akun, tambahkan ketiganya di sini.
+    *   Navigasi ke **APIs & Services > OAuth consent screen**.
+    *   Pilih **External** dan klik **Create**.
+    *   Isi nama aplikasi (misal: "WhatsApp Bot"), email Anda, dan email developer. Klik **Save and Continue**.
+    *   Pada bagian **Scopes**, klik **Add or Remove Scopes**. Cari dan tambahkan scope `.../auth/gmail.modify`. Klik **Update**, lalu **Save and Continue**.
+    *   Pada bagian **Test users**, klik **Add Users** dan tambahkan **semua alamat email Google** yang ingin Anda pantau. Ini penting agar Anda bisa melakukan otorisasi. Klik **Save and Continue**.
 
 4.  **Buat Kredensial (OAuth 2.0 Client ID)**:
-    *   Pilih **Desktop app** sebagai tipe aplikasi.
-    *   Setelah dibuat, klik **DOWNLOAD JSON**.
+    *   Navigasi ke **APIs & Services > Credentials**.
+    *   Klik **+ Create Credentials** dan pilih **OAuth client ID**.
+    *   Pilih **Desktop app** sebagai *Application type*.
+    *   Beri nama (misal: "Bot WhatsApp Desktop Client").
+    *   Klik **Create**.
+    *   Setelah client ID dibuat, sebuah pop-up akan muncul. Klik **DOWNLOAD JSON**.
+    *   Ubah nama file yang diunduh menjadi `credentials-gmail-personal.json` (atau nama lain sesuai akun Anda, misal `credentials-gmail-work.json`).
+    *   Pindahkan file ini ke dalam direktori `src/data/credentials/` pada proyek bot Anda.
 
-5.  **Siapkan File Kredensial**:
-    *   File yang Anda unduh (biasanya bernama `client_secret_....json` atau `credentials.json`) adalah "KTP" untuk aplikasi Anda.
-    *   **Poin Penting:** Anda hanya perlu **satu file** ini. Nanti, Anda akan menyalin dan mengganti nama file ini untuk setiap akun yang Anda konfigurasikan di langkah berikutnya.
+5.  **Buat Pub/Sub Topic & Subscription**:
+    *   Di menu navigasi, cari dan buka **"Pub/Sub"**.
+    *   **Buat Topic:**
+        *   Klik **"Create Topic"**.
+        *   Berikan **Topic ID**, misalnya: `gmail-realtime-updates`.
+        *   Biarkan opsi lain default dan klik **"Create"**.
+    *   **Beri Izin pada Gmail untuk Publikasi ke Topic:**
+        *   Di halaman *topic* `gmail-realtime-updates` Anda, buka tab **"Permissions"**.
+        *   Klik **"ADD PRINCIPAL"**.
+        *   Di kolom **"New principals"**, masukkan alamat email layanan khusus Gmail: `gmail-api-push@system.gserviceaccount.com`.
+        *   Di kolom **"Assign roles"**, cari dan pilih peran **"Pub/Sub Publisher"**. (Gunakan kotak pencarian jika tidak langsung terlihat).
+        *   Klik **"SAVE"**.
+    *   **Buat Subscription:**
+        *   Masih di halaman Pub/Sub, buka tab **"Subscriptions"**.
+        *   Klik **"CREATE SUBSCRIPTION"**.
+        *   Berikan **Subscription ID**, misalnya: `wabot-gmail-listener`.
+        *   Pilih **Topic** yang tadi Anda buat (`gmail-realtime-updates`).
+        *   Biarkan *Delivery type* sebagai **"Pull"**.
+        *   Klik **"CREATE"**.
+
+6.  **Buat Service Account Key untuk Bot (Pub/Sub Subscriber)**:
+    *   Ini adalah kredensial yang akan digunakan bot Anda untuk *mendengarkan* pesan dari Pub/Sub.
+    *   Di menu navigasi, cari **"IAM & Admin"** lalu pilih **"Service Accounts"**.
+    *   Klik **"+ CREATE SERVICE ACCOUNT"**.
+    *   Berikan **Service account name**, misalnya: `wabot-pubsub-listener`.
+    *   Klik **"CREATE AND CONTINUE"**.
+    *   Di bagian **"Grant this service account access to project"**:
+        *   Di kolom **"Select a role"**, cari dan pilih peran **"Pub/Sub Subscriber"**.
+        *   Klik **"CONTINUE"**.
+    *   Klik **"DONE"**.
+    *   Sekarang, klik pada nama Service Account yang baru Anda buat (`wabot-pubsub-listener`).
+    *   Buka tab **"KEYS"**.
+    *   Klik **"ADD KEY"** lalu pilih **"Create new key"**.
+    *   Pilih **"JSON"** sebagai tipe kunci dan klik **"CREATE"**.
+    *   File JSON akan terunduh. Pindahkan file ini ke `src/data/credentials/` dan ganti namanya menjadi `wabot-pubsub-key.json`.
 
 ---
 
 ## 3. Langkah 2: Konfigurasi Environment Bot (.env)
 
-Buka file `.env` Anda dan gunakan format berurutan untuk setiap akun Gmail.
+Buka file `.env` Anda dan gunakan format berurutan untuk setiap akun Gmail, serta tambahkan konfigurasi Pub/Sub dan Service Account Key.
 
 ```env
 # Gmail API Notification Settings
 GMAIL_ENABLED=true
-GMAIL_POLLING_INTERVAL_SECONDS=60
+# GMAIL_POLLING_INTERVAL_SECONDS=60  <-- TIDAK DIGUNAKAN LAGI, BISA DIHAPUS
+
+# Google Cloud Pub/Sub Configuration
+GOOGLE_CLOUD_PROJECT_ID=your-gcp-project-id
+GMAIL_PUBSUB_TOPIC_NAME=projects/your-gcp-project-id/topics/gmail-realtime-updates
+GMAIL_PUBSUB_SUBSCRIPTION_NAME=projects/your-gcp-project-id/subscriptions/wabot-gmail-listener
+GOOGLE_APPLICATION_CREDENTIALS=src/data/credentials/wabot-pubsub-key.json
 
 # --- Akun Gmail Pertama ---
 GMAIL_ACCOUNT_1_NAME="Pribadi"
-GMAIL_ACCOUNT_1_CREDENTIALS_PATH="src/data/credentials/credentials-gmail-pribadi.json"
-GMAIL_ACCOUNT_1_TOKEN_PATH="src/data/credentials/token-gmail-pribadi.json"
-GMAIL_ACCOUNT_1_TARGET_NUMBERS="62812xxxx@c.us"
-GMAIL_ACCOUNT_1_PROCESSED_LABEL="NotifBot-Pribadi"
+GMAIL_ACCOUNT_1_CREDENTIALS_PATH=src/data/credentials/credentials-gmail-pribadi.json
+GMAIL_ACCOUNT_1_TOKEN_PATH=src/data/credentials/token-gmail-pribadi.json
+GMAIL_ACCOUNT_1_TARGET_NUMBERS=62812xxxx@c.us
+GMAIL_ACCOUNT_1_PROCESSED_LABEL=NotifBot-Pribadi
 
 # --- Akun Gmail Kedua (Opsional) ---
 GMAIL_ACCOUNT_2_NAME="Kerja"
-GMAIL_ACCOUNT_2_CREDENTIALS_PATH="src/data/credentials/credentials-gmail-kerja.json"
-GMAIL_ACCOUNT_2_TOKEN_PATH="src/data/credentials/token-gmail-kerja.json"
-GMAIL_ACCOUNT_2_TARGET_NUMBERS="62857xxxx@c.us,62813xxxx@c.us"
-GMAIL_ACCOUNT_2_PROCESSED_LABEL="NotifBot-Kerja"
+GMAIL_ACCOUNT_2_CREDENTIALS_PATH=src/data/credentials/credentials-gmail-kerja.json
+GMAIL_ACCOUNT_2_TOKEN_PATH=src/data/credentials/token-gmail-kerja.json
+GMAIL_ACCOUNT_2_TARGET_NUMBERS=62857xxxx@c.us,62813xxxx@c.us
+GMAIL_ACCOUNT_2_PROCESSED_LABEL=NotifBot-Kerja
 
-# --- Akun Gmail Ketiga (Opsional) ---
-GMAIL_ACCOUNT_3_NAME="Project"
-GMAIL_ACCOUNT_3_CREDENTIALS_PATH="src/data/credentials/credentials-gmail-project.json"
-GMAIL_ACCOUNT_3_TOKEN_PATH="src/data/credentials/token-gmail-project.json"
-GMAIL_ACCOUNT_3_TARGET_NUMBERS="62899xxxx@c.us"
-GMAIL_ACCOUNT_3_PROCESSED_LABEL="NotifBot-Project"
+# ... (Akun Gmail lainnya)
 ```
 
-**Penjelasan Variabel:**
-- `GMAIL_ENABLED`: Saklar utama untuk mengaktifkan/menonaktifkan semua notifikasi Gmail.
-- `GMAIL_ACCOUNT_1_NAME`: Nama panggilan unik untuk akun (akan muncul saat setup).
-- `GMAIL_ACCOUNT_1_CREDENTIALS_PATH`: Path ke file kredensial. Salin file JSON yang Anda unduh dari Google dan ganti namanya sesuai path ini.
-- `GMAIL_ACCOUNT_1_TOKEN_PATH`: Path tempat token otorisasi akan disimpan. **Harus unik** untuk setiap akun.
-- `GMAIL_ACCOUNT_1_TARGET_NUMBERS`: Nomor WhatsApp tujuan notifikasi **khusus untuk akun ini**.
-- `GMAIL_ACCOUNT_1_PROCESSED_LABEL`: Nama label unik yang akan dibuat di akun Gmail ini.
+**Penjelasan Variabel Baru:**
+*   `GOOGLE_CLOUD_PROJECT_ID`: ID proyek Google Cloud Anda.
+*   `GMAIL_PUBSUB_TOPIC_NAME`: Nama lengkap *topic* Pub/Sub Anda (termasuk `projects/your-gcp-project-id/topics/`).
+*   `GMAIL_PUBSUB_SUBSCRIPTION_NAME`: Nama lengkap *subscription* Pub/Sub Anda (termasuk `projects/your-gcp-project-id/subscriptions/`).
+*   `GOOGLE_APPLICATION_CREDENTIALS`: Path ke file JSON Service Account Key yang Anda unduh di langkah sebelumnya. Ini digunakan oleh library Pub/Sub untuk otentikasi.
 
 ---
 
-## 4. Langkah 3: Otorisasi Setiap Akun
+## 4. Langkah 3: Otorisasi Setiap Akun & Registrasi Push
 
-Skrip otorisasi sekarang bersifat interaktif. Anda perlu menjalankan proses ini untuk setiap akun yang Anda tambahkan.
+Skrip otorisasi kini akan secara otomatis mendaftarkan akun Anda untuk menerima *push notifications* setelah otorisasi berhasil.
 
 1.  **Jalankan Skrip:**
     Di terminal, jalankan perintah:
@@ -105,28 +158,64 @@ Skrip otorisasi sekarang bersifat interaktif. Anda perlu menjalankan proses ini 
 
 4.  **Masukkan Kode ke Terminal:**
     *   Tempel kode tersebut di terminal dan tekan Enter.
-    *   Skrip akan membuat file token yang sesuai (misal: `token-gmail-pribadi.json`).
+    *   Skrip akan membuat file token yang sesuai (misal: `token-gmail-pribadi.json`) dan secara otomatis mendaftarkan akun tersebut untuk *push notifications*.
 
 5.  **Ulangi untuk Akun Lain:**
-    Jalankan kembali `node scripts/setup-gmail.js` dan pilih akun lain (misal: `2` untuk "Kerja") untuk mengotorisasinya. Lakukan ini sampai semua akun Anda memiliki file token-nya masing-masing.
+    Jalankan kembali `node scripts/setup-gmail.js` dan pilih akun lain (misal: `2` untuk "Kerja") untuk mengotorisasinya. Lakukan ini sampai semua akun Anda memiliki file token-nya masing-masing dan terdaftar untuk *push notifications*.
 
 6.  **Restart Bot:** Setelah semua akun diotorisasi, restart bot Anda.
 
 ---
 
-## 5. Alur Kerja Teknis
+## 5. Kontrol Dinamis (Perintah Admin)
 
-1.  Saat bot dimulai, ia akan memeriksa `GMAIL_ENABLED` dan menginisialisasi sebuah klien API untuk **setiap akun** yang memiliki file token yang valid.
-2.  Bot memulai *polling* (pemeriksaan berkala) setiap `GMAIL_POLLING_INTERVAL_SECONDS`.
-3.  Setiap kali pemeriksaan, bot akan melakukan loop untuk **setiap akun yang aktif**:
-    a.  Meminta daftar email dengan kriteria: `is:unread` DAN `TIDAK memiliki label` yang ditentukan.
-    b.  Untuk setiap email, bot mengambil detail pengirim, subjek, dan cuplikan.
-    c.  Mengirim notifikasi ke semua nomor di `TARGET_NUMBERS` yang **spesifik untuk akun tersebut**.
-    d.  **Menandai email sebagai sudah dibaca** (menghapus label `UNREAD`) dan **menambahkan label stempel** (misal: `NotifBot-Pribadi`) untuk memastikan tidak ada notifikasi ganda.
+Anda dapat mengaktifkan atau menonaktifkan seluruh fitur notifikasi Gmail secara dinamis melalui perintah WhatsApp tanpa perlu me-restart bot. Perintah ini hanya bisa digunakan oleh admin.
+
+-   `/gmail on`
+    Mengaktifkan kembali layanan notifikasi Gmail.
+
+-   `/gmail off`
+    Menonaktifkan layanan notifikasi Gmail. Bot akan berhenti memeriksa email baru.
+
+-   `/gmail status`
+    Mengecek status layanan saat ini (apakah sedang aktif atau tidak).
+
+Status ini akan tersimpan, bahkan jika bot di-restart. Status default saat pertama kali dijalankan akan mengikuti nilai `GMAIL_ENABLED` di file `.env` Anda.
 
 ---
 
-## 6. Troubleshooting
+## 6. Alur Kerja Teknis
+
+1.  Saat bot dimulai, ia akan memeriksa `GMAIL_ENABLED` dan menginisialisasi sebuah klien API untuk **setiap akun** yang memiliki file token yang valid.
+2.  Bot akan menginisialisasi klien Google Cloud Pub/Sub menggunakan **Service Account Key** yang telah dikonfigurasi.
+3.  Bot akan mulai *mendengarkan* (subscribe) pesan dari *subscription* Pub/Sub yang telah ditentukan.
+4.  Ketika email baru masuk ke salah satu akun Gmail yang terdaftar, Gmail API akan mengirimkan notifikasi ke *topic* Pub/Sub Anda.
+5.  Bot akan menerima notifikasi dari *subscription* Pub/Sub.
+6.  Untuk setiap notifikasi, bot akan mengambil `historyId` terbaru dan membandingkannya dengan `historyId` terakhir yang diketahui untuk akun tersebut (disimpan di Redis).
+7.  Bot akan meminta daftar perubahan (email baru) dari Gmail API berdasarkan `historyId` tersebut.
+8.  Untuk setiap email baru yang terdeteksi dan belum dibaca, bot akan mengambil detail pengirim, subjek, dan cuplikan.
+9.  Mengirim notifikasi ke semua nomor di `TARGET_NUMBERS` yang **spesifik untuk akun tersebut**.
+10. **Menandai email sebagai sudah dibaca** (menghapus label `UNREAD`) dan **menambahkan label stempel** (misal: `NotifBot-Pribadi`) untuk memastikan tidak ada notifikasi ganda.
+
+---
+
+## 7. Troubleshooting
+
+-   **Error: `Could not load the default credentials` (saat bot start atau Pub/Sub error)**
+    *   **Penyebab:** Library Pub/Sub tidak dapat menemukan kredensial untuk mengautentikasi ke Google Cloud.
+    *   **Solusi:** Pastikan Anda telah membuat **Service Account Key** dengan peran **"Pub/Sub Subscriber"** dan menempatkan file JSON-nya di `src/data/credentials/wabot-pubsub-key.json`. Pastikan juga variabel `GOOGLE_APPLICATION_CREDENTIALS` di `.env` mengarah ke file tersebut.
+
+-   **Error: `User not authorized to perform this action.` (saat bot mencoba mendengarkan Pub/Sub)**
+    *   **Penyebab:** Service Account Anda (`wabot-pubsub-listener`) tidak memiliki izin yang cukup untuk *mendengarkan* (subscribe) pesan dari Pub/Sub.
+    *   **Solusi:** Pastikan Anda telah memberikan peran **"Pub/Sub Subscriber"** kepada Service Account Anda (`wabot-pubsub-listener@your-gcp-project-id.iam.gserviceaccount.com`) di *subscription* Pub/Sub Anda (`wabot-gmail-listener`).
+
+-   **Pesan `Gmail notifications are disabled, skipping processing.` di log bot.**
+    *   **Penyebab:** Fitur notifikasi Gmail secara keseluruhan dinonaktifkan.
+    *   **Solusi:** Jalankan perintah `/gmail on` di WhatsApp untuk mengaktifkannya.
+
+-   **Pesan `No previous historyId found for [Nama Akun]. Storing current one and processing next time.` di log bot.**
+    *   **Penyebab:** Ini adalah notifikasi *push* pertama yang diterima bot untuk akun tersebut setelah migrasi ke Pub/Sub. Bot belum memiliki `historyId` sebelumnya untuk membandingkan perubahan.
+    *   **Solusi:** Ini adalah perilaku normal. Email yang memicu pesan ini tidak akan diproses saat ini, tetapi semua email baru yang masuk setelahnya akan diproses dengan normal. Kirim email tes baru untuk memverifikasi.
 
 -   **Salah satu akun saya tidak muncul saat menjalankan `setup-gmail.js`?**
     *   **Penyebab:** Kemungkinan besar ada kesalahan penomoran pada nama variabel di file `.env`.
@@ -138,4 +227,4 @@ Skrip otorisasi sekarang bersifat interaktif. Anda perlu menjalankan proses ini 
     *   Pastikan file `credentials-gmail-namaakun.json` dan `token-gmail-namaakun.json` ada di direktori yang benar dan sudah diotorisasi.
 
 -   **Kenapa email saya ditandai sudah dibaca?**
-    *   Ini adalah perilaku normal dari sistem perbaikan bug terbaru untuk mencegah notifikasi berulang. Dengan menandainya sebagai sudah dibaca, bot secara pasti tidak akan mengambilnya lagi di siklus berikutnya.
+    *   Ini adalah perilaku normal dari sistem untuk mencegah notifikasi berulang. Dengan menandainya sebagai sudah dibaca, bot secara pasti tidak akan mengambilnya lagi di siklus berikutnya.
