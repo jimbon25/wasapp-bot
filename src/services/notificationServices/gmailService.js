@@ -216,16 +216,13 @@ class GmailService {
             const receivedDate = new Date(parseInt(details.internalDate));
             const timestamp = receivedDate.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 
-            const notifMessage = `📧 *GMAIL NOTIFICATION* 📧\n` +
+            const notifMessage = `*GMAIL NOTIFICATION*\n` +
                                  `━━━━━━━━━━━━━\n\n` +
                                  `*Akun:* _${clientData.name}_\n` +
                                  `*Waktu:* ${timestamp}\n\n` +
-                                 `*Dari:*
-${details.from}\n\n` +
-                                 `*Subjek:*
-${details.subject}\n\n` +
-                                 `*Pesan:*
-_${details.snippet}_\n\n` +
+                                 `*Dari:* ${details.from}\n\n` +
+                                 `*Subjek:* ${details.subject}\n\n` +
+                                 `*Pesan:* _${details.snippet}_\n\n` +
                                  `*Lihat Pesan:* ${details.messageUrl}\n\n`;
                                     ;
             for (const targetNumber of clientData.targetNumbers) {

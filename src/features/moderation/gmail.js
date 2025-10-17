@@ -13,21 +13,21 @@ export default {
             switch (subCommand) {
                 case 'on':
                     await gmailService.setPollingStatus(true);
-                    await message.reply('✅ Notifikasi Gmail telah diaktifkan.');
+                    await message.reply('Notifikasi Gmail diaktifkan.');
                     logger.info(`Gmail notifications turned ON by admin ${message.author || message.from}`);
                     break;
 
                 case 'off':
                     await gmailService.setPollingStatus(false);
-                    await message.reply('❌ Notifikasi Gmail telah dinonaktifkan.');
+                    await message.reply('Notifikasi Gmail dinonaktifkan.');
                     logger.info(`Gmail notifications turned OFF by admin ${message.author || message.from}`);
                     break;
 
                 case 'status':
                     const isEnabled = await gmailService.isPollingEnabled();
                     const statusMessage = isEnabled
-                        ? 'Status Notifikasi Gmail saat ini: *Aktif* (ON) ✅'
-                        : 'Status Notifikasi Gmail saat ini: *Tidak Aktif* (OFF) ❌';
+                        ? 'Status Notifikasi Gmail: *Aktif* (ON)'
+                        : 'Status Notifikasi Gmail: *Tidak Aktif* (OFF)';
                     await message.reply(statusMessage);
                     break;
 
