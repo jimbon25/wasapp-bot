@@ -29,10 +29,12 @@ const config = {
     },
     gmail: {
       enabled: process.env.GMAIL_ENABLED === 'true',
+      leaveAsUnread: process.env.GMAIL_LEAVE_AS_UNREAD === 'true',
       pollingInterval: parseInt(process.env.GMAIL_POLLING_INTERVAL_SECONDS, 10) || 60,
       projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
       topicName: process.env.GMAIL_PUBSUB_TOPIC_NAME,
       subscriptionName: process.env.GMAIL_PUBSUB_SUBSCRIPTION_NAME,
+      notifiedIdExpiryDays: parseInt(process.env.GMAIL_NOTIFIED_ID_EXPIRY_DAYS, 10) || 30,
       accounts: (() => {
         const accounts = [];
         for (let i = 1; i <= 5; i++) { // Allow up to 5 accounts

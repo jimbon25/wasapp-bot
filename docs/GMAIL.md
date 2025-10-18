@@ -19,9 +19,14 @@ Fitur ini memungkinkan bot untuk secara otomatis memeriksa **beberapa akun Gmail
 
 Ketika email baru ditemukan di salah satu akun, Google akan mengirimkan notifikasi ke Pub/Sub, yang kemudian akan diterima oleh bot. Bot akan mengirimkan notifikasi yang berisi informasi dasar (pengirim, subjek, cuplikan) ke nomor WhatsApp yang telah ditentukan **khusus untuk akun tersebut**.
 
-Untuk mencegah notifikasi berulang secara permanen, bot akan melakukan dua tindakan pada email yang telah diproses:
+**Pencegahan Notifikasi Ganda:**
+Untuk mencegah notifikasi berulang, bot menggunakan database internal (Redis) untuk mencatat ID setiap email yang notifikasinya telah berhasil dikirim.
+
+Secara default, bot juga akan melakukan dua tindakan pada email yang telah diproses untuk pemeliharaan:
 1.  **Menandai sebagai sudah dibaca** (menghapus label `UNREAD`).
-2.  **Memberikan label "stempel"** (contoh: `NotifBot-Pribadi`) sebagai penanda tambahan.
+2.  **Memberikan label "stempel"** (contoh: `NotifBot-Pribadi`).
+
+**Perilaku ini sekarang dapat diubah.** Jika Anda ingin email tetap dalam status "belum dibaca" di Gmail, Anda dapat mengaturnya melalui file `.env`.
 
 **Keuntungan Push Notifications:**
 *   **Real-time:** Notifikasi dikirim hampir seketika setelah email diterima.
@@ -104,7 +109,11 @@ Buka file `.env` Anda dan gunakan format berurutan untuk setiap akun Gmail, sert
 ```env
 # Gmail API Notification Settings
 GMAIL_ENABLED=true
-# GMAIL_POLLING_INTERVAL_SECONDS=60  <-- TIDAK DIGUNAKAN LAGI, BISA DIHAPUS
+# Set to true to prevent the bot from marking emails as read in your Gmail account.
+# The bot will use its internal database (Redis) to track notified emails.
+GMAIL_LEAVE_AS_UNREAD=true
+# Expiry time in days for the list of notified email IDs in Redis.
+GMAIL_NOTIFIED_ID_EXPIRY_DAYS=30
 
 # Google Cloud Pub/Sub Configuration
 GOOGLE_CLOUD_PROJECT_ID=your-gcp-project-id
@@ -130,6 +139,8 @@ GMAIL_ACCOUNT_2_PROCESSED_LABEL=NotifBot-Kerja
 ```
 
 **Penjelasan Variabel Baru:**
+*   `GMAIL_LEAVE_AS_UNREAD`: Atur ke `true` jika Anda tidak ingin bot menandai email sebagai "telah dibaca".
+*   `GMAIL_NOTIFIED_ID_EXPIRY_DAYS`: (Opsional) Berapa lama (dalam hari) ID email yang sudah dinotifikasi akan disimpan di Redis sebelum dihapus. Defaultnya adalah 30 hari.
 *   `GOOGLE_CLOUD_PROJECT_ID`: ID proyek Google Cloud Anda.
 *   `GMAIL_PUBSUB_TOPIC_NAME`: Nama lengkap *topic* Pub/Sub Anda (termasuk `projects/your-gcp-project-id/topics/`).
 *   `GMAIL_PUBSUB_SUBSCRIPTION_NAME`: Nama lengkap *subscription* Pub/Sub Anda (termasuk `projects/your-gcp-project-id/subscriptions/`).
@@ -193,9 +204,13 @@ Status ini akan tersimpan, bahkan jika bot di-restart. Status default saat perta
 5.  Bot akan menerima notifikasi dari *subscription* Pub/Sub.
 6.  Untuk setiap notifikasi, bot akan mengambil `historyId` terbaru dan membandingkannya dengan `historyId` terakhir yang diketahui untuk akun tersebut (disimpan di Redis).
 7.  Bot akan meminta daftar perubahan (email baru) dari Gmail API berdasarkan `historyId` tersebut.
-8.  Untuk setiap email baru yang terdeteksi dan belum dibaca, bot akan mengambil detail pengirim, subjek, dan cuplikan.
+8.  Untuk setiap email baru yang terdeteksi dan belum dibaca, bot akan:
+    a. Memeriksa di Redis apakah ID email ini sudah pernah dinotifikasi sebelumnya.
+    b. Jika sudah, email akan diabaikan.
+    c. Jika belum, bot akan mengambil detail pengirim, subjek, dan cuplikan.
 9.  Mengirim notifikasi ke semua nomor di `TARGET_NUMBERS` yang **spesifik untuk akun tersebut**.
-10. **Menandai email sebagai sudah dibaca** (menghapus label `UNREAD`) dan **menambahkan label stempel** (misal: `NotifBot-Pribadi`) untuk memastikan tidak ada notifikasi ganda.
+10. Setelah mengirim notifikasi, bot akan **menyimpan ID email tersebut ke Redis** untuk mencegah notifikasi ganda di masa depan.
+11. Terakhir, bot akan menambahkan label "stempel" (misal: `NotifBot-Pribadi`). Jika `GMAIL_LEAVE_AS_UNREAD` tidak diatur ke `true`, bot juga akan **menandai email sebagai sudah dibaca**.
 
 ---
 
@@ -226,5 +241,6 @@ Status ini akan tersimpan, bahkan jika bot di-restart. Status default saat perta
     *   Pastikan `GMAIL_ACCOUNT_X_TARGET_NUMBERS` untuk akun tersebut sudah diisi dengan benar.
     *   Pastikan file `credentials-gmail-namaakun.json` dan `token-gmail-namaakun.json` ada di direktori yang benar dan sudah diotorisasi.
 
--   **Kenapa email saya ditandai sudah dibaca?**
-    *   Ini adalah perilaku normal dari sistem untuk mencegah notifikasi berulang. Dengan menandainya sebagai sudah dibaca, bot secara pasti tidak akan mengambilnya lagi di siklus berikutnya.
+-   **Kenapa email saya tetap belum dibaca padahal notifikasi sudah masuk?**
+    *   **Penyebab:** Ini adalah perilaku baru yang bisa dikonfigurasi. Kemungkinan Anda mengaktifkan `GMAIL_LEAVE_AS_UNREAD=true` di file `.env` Anda.
+    *   **Solusi:** Ini adalah perilaku yang diharapkan jika setelan tersebut aktif. Bot sekarang menggunakan database internalnya (Redis) untuk melacak email yang sudah dinotifikasi, sehingga tidak perlu lagi mengubah status email Anda di Gmail. Jika Anda ingin kembali ke perilaku lama (menandai sebagai telah dibaca), ubah nilainya menjadi `false` atau hapus baris tersebut dari file `.env` Anda.

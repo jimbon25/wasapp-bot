@@ -209,7 +209,21 @@ class GmailService {
     }
 
     async sendNotificationForMessage(clientData, messageId, whatsappClient) {
+        const redisClient = await redisManager.getClient();
+        if (!redisClient) {
+            logger.warn('Redis client not available, cannot check for duplicate notifications.');
+            return;
+        }
+
+        const notifiedIdsKey = `gmail:notified_ids:${clientData.name}`;
+
         try {
+            const isNotified = await redisClient.sismember(notifiedIdsKey, messageId);
+            if (isNotified) {
+                logger.info(`Skipping notification for already processed email ${messageId} for account "${clientData.name}".`);
+                return;
+            }
+
             const details = await this.getEmailDetails(clientData, messageId);
             if (!details) return;
 
@@ -219,12 +233,12 @@ class GmailService {
             const notifMessage = `*GMAIL NOTIFICATION*\n` +
                                  `━━━━━━━━━━━━━\n\n` +
                                  `*Akun:* _${clientData.name}_\n` +
-                                 `*Waktu:* ${timestamp}\n\n` +
+                                 `*Waktu:* ${timestamp}\n` +
                                  `*Dari:* ${details.from}\n\n` +
                                  `*Subjek:* ${details.subject}\n\n` +
                                  `*Pesan:* _${details.snippet}_\n\n` +
                                  `*Lihat Pesan:* ${details.messageUrl}\n\n`;
-                                    ;
+
             for (const targetNumber of clientData.targetNumbers) {
                 if (targetNumber) {
                     try {
@@ -235,6 +249,11 @@ class GmailService {
                     }
                 }
             }
+
+            // Add to Redis set after successful notification attempt
+            await redisClient.sadd(notifiedIdsKey, messageId);
+            await redisClient.expire(notifiedIdsKey, this.config.notifiedIdExpiryDays * 24 * 60 * 60);
+
             await this.applyProcessedLabel(clientData, details.id);
 
         } catch (error) {
@@ -271,15 +290,27 @@ class GmailService {
 
     async applyProcessedLabel(clientData, messageId) {
         try {
+            const resource = {
+                addLabelIds: [clientData.processedLabelId],
+                removeLabelIds: []
+            };
+
+            // Only mark as read if the config flag is not set to true
+            if (!this.config.leaveAsUnread) {
+                resource.removeLabelIds.push('UNREAD');
+            }
+
             await clientData.gmail.users.messages.modify({
                 userId: 'me',
                 id: messageId,
-                resource: {
-                    addLabelIds: [clientData.processedLabelId],
-                    removeLabelIds: ['UNREAD']
-                },
+                resource: resource,
             });
-            logger.info(`Applied label and marked as read for email ${messageId} for account "${clientData.name}".`);
+
+            const logMessage = this.config.leaveAsUnread
+                ? `Applied label for email ${messageId} for account "${clientData.name}".`
+                : `Applied label and marked as read for email ${messageId} for account "${clientData.name}".`;
+            logger.info(logMessage);
+
         } catch (error) {
             logger.error(`Error modifying email ${messageId} for "${clientData.name}":`, error);
         }

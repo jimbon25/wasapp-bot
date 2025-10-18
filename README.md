@@ -235,6 +235,10 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Perubahan & Peningkatan (Changes & Improvements)
 
+*   **Peningkatan Notifikasi Gmail**:
+    *   Bot kini dapat mengirim notifikasi email **tanpa harus menandai email sebagai 'telah dibaca'** di akun Gmail Anda, memberikan kontrol penuh atas status inbox Anda.
+    *   Perilaku ini dapat diaktifkan melalui variabel baru di `.env`: `GMAIL_LEAVE_AS_UNREAD=true`.
+    *   Masa kedaluwarsa untuk jejak notifikasi di Redis kini juga dapat diatur melalui `GMAIL_NOTIFIED_ID_EXPIRY_DAYS`.
 *   **Notifikasi Gmail Real-time**: Fitur notifikasi Gmail dirombak total dari sistem *polling* menjadi *push notifications* menggunakan Google Cloud Pub/Sub. Kini mendukung notifikasi instan dari multi-akun Gmail dan menyertakan *direct link* ke pesan email. ([Lihat Dokumentasi Lengkap](./docs/GMAIL.md))
 *   **Sistem Batch Auto-Upload Menjadi Milik Grup**:
     *   Fitur `AUTO_UPLOAD` sekarang mengumpulkan file media yang dikirim oleh **siapa saja** di dalam grup.
