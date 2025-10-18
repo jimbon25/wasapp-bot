@@ -69,7 +69,6 @@ Bot WhatsApp multifungsi dengan fitur AI chat (Gemini), Instagram downloader, tr
 
 ### Informasi & Utilitas
 
-- **Maps Service**: Cari lokasi terdekat dengan `/maps`.
 - **Jadwal Sholat**: Tampilkan jadwal sholat untuk berbagai kota dengan `/sholat`.
 - **Wikipedia Search**: Cari ringkasan artikel dari Wikipedia dengan `/wiki`.
 - **Status Bot**: Cek status bot dengan `/ping`.
@@ -236,7 +235,6 @@ Berikut adalah daftar perintah utama yang tersedia.
 | `/sholat [kota]` | Menampilkan jadwal sholat untuk kota tertentu di Indonesia. |
 | `/translate [lang] [teks]` | Menerjemahkan teks. Contoh: `/translate id Hello`. |
 | `/wiki [kata kunci]` | Mencari ringkasan artikel di Wikipedia. |
-| `/maps [lokasi]` | Mencari lokasi di peta berdasarkan kata kunci (memerlukan user mengirim lokasi dulu). |
 | `/ping` | Menguji status dan respons bot. |
 | `/menu` | Menampilkan semua command yang tersedia. |
 

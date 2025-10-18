@@ -214,6 +214,18 @@ Status ini akan tersimpan, bahkan jika bot di-restart. Status default saat perta
 
 ---
 
+## Disclaimer
+
+This feature integrates with the official Gmail API and is intended for personal notification purposes only. The author of this software is not responsible for any of the following:
+
+*   **Misuse of the feature:** You are solely responsible for how you use this notification feature. Any use for spamming, unauthorized surveillance, or any other activity that violates Gmail's terms of service is strictly prohibited.
+*   **Account Suspension:** Exceeding API rate limits, sending unsolicited messages, or other violations of platform policies may result in the suspension of your Google or WhatsApp account. Use this feature responsibly.
+*   **Data Privacy:** While the bot is designed to be secure, you are responsible for securing the server and environment where the bot is running. The author is not liable for any data breaches or privacy violations that may occur.
+
+By using this feature, you agree to assume all risks and responsibilities associated with its use.
+
+---
+
 ## 7. Troubleshooting
 
 -   **Error: `Could not load the default credentials` (saat bot start atau Pub/Sub error)**

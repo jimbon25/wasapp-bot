@@ -260,26 +260,6 @@ const config = {
 
   // Removed duplicate security configuration
 
-  maps: {
-    // Overpass API settings
-    overpass: {
-      apiUrl: process.env.OVERPASS_API_URL || 'https://overpass-api.de/api/interpreter',
-      timeout: parseInt(process.env.OVERPASS_TIMEOUT, 10) || 10000, // 10 seconds
-      searchRadius: parseInt(process.env.OVERPASS_SEARCH_RADIUS, 10) || 1000, // 1 km in meters
-    },
-    // Nominatim API settings
-    nominatim: {
-      apiUrl: process.env.NOMINATIM_API_URL || 'https://nominatim.openstreetmap.org/search',
-      timeout: parseInt(process.env.NOMINATIM_TIMEOUT, 10) || 10000, // 10 seconds
-      userAgent: process.env.BOT_USER_AGENT || 'WhatsApp_Bot/1.0',
-      limit: parseInt(process.env.NOMINATIM_RESULT_LIMIT, 10) || 5,
-    },
-    // User location cache settings
-    locationCache: {
-      ttl: parseInt(process.env.LOCATION_CACHE_TTL, 10) || 86400, // 24 hours in seconds
-    },
-  },
-
   services: {
     sticker: {
       cleanupInterval: parseInt(process.env.STICKER_CLEANUP_INTERVAL, 10) || 3600000, // 1 hour in milliseconds
@@ -288,65 +268,6 @@ const config = {
     removebg: {
       apiUrl: process.env.REMOVEBG_API_URL || 'https://api.remove.bg/v1.0/removebg',
       supportedFormats: (process.env.REMOVEBG_SUPPORTED_FORMATS || 'image/jpeg,image/png').split(','),
-    },
-    maps: {
-      keywords: (() => {
-        const keywords = {};
-        // Get all environment variables starting with MAPS_KEYWORDS_
-        Object.keys(process.env)
-          .filter(key => key.startsWith('MAPS_KEYWORDS_'))
-          .forEach(key => {
-            const keyword = key.replace('MAPS_KEYWORDS_', '').toLowerCase();
-            const value = process.env[key];
-            // Parse the value format: amenity=cafe,shop=coffee or amenity=place_of_worship;religion=muslim
-            const tags = value.split(',').map(tagSet => {
-              const parts = tagSet.split(';');
-              const mainTag = parts[0].split('=');
-              const additionalTags = {};
-              
-              // Parse additional tags if present
-              if (parts.length > 1) {
-                parts.slice(1).forEach(tag => {
-                  const [k, v] = tag.split('=');
-                  additionalTags[k] = v;
-                });
-              }
-
-              return {
-                key: mainTag[0],
-                value: mainTag[1],
-                ...(Object.keys(additionalTags).length > 0 ? { additionalTags } : {})
-              };
-            });
-            keywords[keyword] = tags;
-          });
-        
-        // Return default keywords if none configured in environment
-        return Object.keys(keywords).length > 0 ? keywords : {
-          'kopi': [{ key: 'amenity', value: 'cafe' }, { key: 'shop', value: 'coffee' }],
-          'coffee': [{ key: 'amenity', value: 'cafe' }, { key: 'shop', value: 'coffee' }],
-          'cafe': [{ key: 'amenity', value: 'cafe' }],
-          'masjid': [{ key: 'amenity', value: 'place_of_worship', additionalTags: { 'religion': 'muslim' } }],
-          'mosque': [{ key: 'amenity', value: 'place_of_worship', additionalTags: { 'religion': 'muslim' } }],
-          'atm': [{ key: 'amenity', value: 'atm' }],
-          'spbu': [{ key: 'amenity', value: 'fuel' }],
-          'pom bensin': [{ key: 'amenity', value: 'fuel' }],
-          'restoran': [{ key: 'amenity', value: 'restaurant' }],
-          'restaurant': [{ key: 'amenity', value: 'restaurant' }],
-          'indomaret': [{ key: 'shop', value: 'convenience', additionalTags: { 'brand': 'Indomaret' } }],
-          'alfamart': [{ key: 'shop', value: 'convenience', additionalTags: { 'brand': 'Alfamart' } }],
-          'apotek': [{ key: 'amenity', value: 'pharmacy' }],
-          'pharmacy': [{ key: 'amenity', value: 'pharmacy' }],
-          'rumah sakit': [{ key: 'amenity', value: 'hospital' }],
-          'hospital': [{ key: 'amenity', value: 'hospital' }],
-          'sekolah': [{ key: 'amenity', value: 'school' }],
-          'school': [{ key: 'amenity', value: 'school' }],
-          'bank': [{ key: 'amenity', value: 'bank' }],
-          'hotel': [{ key: 'tourism', value: 'hotel' }],
-          'supermarket': [{ key: 'shop', value: 'supermarket' }],
-          'pasar': [{ key: 'amenity', value: 'marketplace' }],
-        };
-      })()
     },
   },
 

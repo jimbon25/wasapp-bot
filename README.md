@@ -27,7 +27,6 @@ Bot WhatsApp multifungsi dengan fitur AI chat (Gemini), Instagram downloader, tr
 -   **Mega.nz**: Unggah file ke Mega.nz dengan `/mega`, mendukung sesi multi-upload ke folder default.
 
 ### Informasi & Utilitas
--   **Maps Service**: Cari lokasi terdekat dengan `/maps`.
 -   **Jadwal Sholat**: Tampilkan jadwal sholat untuk berbagai kota dengan `/sholat`.
 -   **Wikipedia Search**: Cari ringkasan artikel dari Wikipedia dengan `/wiki`.
 -   **Status Bot**: Cek status bot dengan `/ping`.
@@ -153,7 +152,6 @@ Berikut adalah daftar perintah utama yang tersedia. Untuk daftar lengkap dan ban
 | **Informasi & Utilitas** | `/sholat [kota]`                      | Menampilkan jadwal sholat untuk kota tertentu.                         |
 |                    | `/translate [lang] [teks]`            | Menerjemahkan teks ke bahasa lain.                                     |
 |                    | `/wiki [kata kunci]`                  | Mencari ringkasan artikel di Wikipedia.                                |
-|                    | `/maps [lokasi]`                      | Mencari lokasi di peta berdasarkan kata kunci.                         |
 | **AI & Chat**      | `/ask [pertanyaan]`                   | Bertanya kepada AI (Gemini) untuk jawaban akademis.                    |
 |                    | `/talk [pesan]`                       | Memulai chat interaktif dan santai dengan AI (Gemini).                 |
 | **Instagram**      | `/download [URL]`                     | Mengunduh post/reel/story dari Instagram.                              |

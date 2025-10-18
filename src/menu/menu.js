@@ -76,10 +76,6 @@ Tanya hal spesifik ke AI
 *Contoh:* \`/ask Bagaimana cara kerja energi surya?\`
 
 📍 *Location Services*
-\`/maps [keyword]\`
-Mencari dan menampilkan lokasi di peta
-*Contoh:* \`/maps Monas Jakarta\`
-
 \`/sholat [kota]\`
 Menampilkan jadwal sholat
 *Contoh:* \`/sholat surabaya\`

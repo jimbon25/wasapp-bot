@@ -96,14 +96,6 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
                         return;
                     }
 
-                    if (message.location) {
-                        const mapsCommand = commandHandler.commands.get('maps');
-                        if (mapsCommand) {
-                            await mapsCommand.execute(message, []);
-                            return;
-                        }
-                    }
-
                     if (message.hasMedia) {
                         const gdriveCommand = commandHandler.commands.get('gdrive');
                         if (gdriveCommand) {
