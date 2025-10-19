@@ -54,11 +54,11 @@ export default {
         } catch (error) {
             logger.error('Error in anime command:', error);
             
-            let errorMessage = '❌ Maaf, terjadi kesalahan.';
+            let errorMessage = '✘ Maaf, terjadi kesalahan.';
             if (error.message === 'Anime tidak ditemukan') {
-                errorMessage = '❌ Anime tidak ditemukan. Coba cari dengan kata kunci lain.';
+                errorMessage = '✘ Anime tidak ditemukan. Coba cari dengan kata kunci lain.';
             } else if (error.message === 'Link streaming tidak ditemukan') {
-                errorMessage = '❌ Link streaming tidak tersedia untuk anime ini.';
+                errorMessage = '✘ Link streaming tidak tersedia untuk anime ini.';
             }
             
             await message.reply(errorMessage);

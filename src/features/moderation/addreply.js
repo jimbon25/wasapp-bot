@@ -32,7 +32,7 @@ export default {
                     scope = 'global';
                     contextId = '';
                 } else if (flag === '--group') {
-                    if (!chat.isGroup) return await message.reply('❌ Flag --group hanya bisa digunakan di dalam grup.');
+                    if (!chat.isGroup) return await message.reply('✗ Flag --group hanya bisa digunakan di dalam grup.');
                     scope = 'group';
                     contextId = chat.id._serialized;
                 } else if (flag.startsWith('--user=')) {
@@ -122,11 +122,11 @@ export default {
                 logger.info(`[addreply] Admin ${senderId} added rule. Scope: ${scope}, Context: ${contextId}, Keywords: "${keywords.join(', ')}"`);
                 await message.reply(replyMessage);
             } else {
-                await message.reply('❌ Gagal menyimpan auto-reply.');
+                await message.reply('✗ Gagal menyimpan auto-reply.');
             }
         } catch (error) {
             logger.error('[addreply] An error occurred:', error);
-            await message.reply('❌ Terjadi kesalahan internal saat menambahkan balasan.');
+            await message.reply('✗ Terjadi kesalahan internal saat menambahkan balasan.');
         }
     }
 };

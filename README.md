@@ -229,11 +229,13 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Fitur Baru (Features)
 
+*   **Restart Otomatis untuk Konfigurasi Baru**: Bot kini dapat mendeteksi perubahan pada konfigurasi akun Gmail (penambahan, penghapusan, atau otorisasi baru) dan akan secara otomatis me-restart dirinya sendiri untuk menerapkan perubahan tersebut. Pengguna tidak perlu lagi me-restart service secara manual.
 *   **Unduh Lampiran Gmail**: Pengguna sekarang dapat mengunduh lampiran email langsung dari WhatsApp dengan membalas pesan notifikasi Gmail menggunakan perintah `/gmail download [nomor]`.
 *   **Pembatalan Auto-Upload**: Menambahkan perintah baru `/upload cancel`. Admin sekarang dapat membatalkan sesi pengumpulan media untuk fitur `AUTO_UPLOAD` sebelum bot mengirimkan prompt konfirmasi.
 
 #### Perubahan & Peningkatan (Changes & Improvements)
 
+*   **Peningkatan Skrip Setup Gmail**: Skrip `setup-gmail.js` kini lebih mudah digunakan. Pengguna dapat memasukkan nomor telepon target dalam format biasa (misalnya, `0812...`) dan skrip akan secara otomatis memformatnya ke format WhatsApp yang benar (`62812...@c.us`).
 *   **Peningkatan Notifikasi Gmail**:
     *   Notifikasi sekarang menampilkan daftar lampiran yang ada di email.
     *   Bot kini dapat mengirim notifikasi email **tanpa harus menandai email sebagai 'telah dibaca'** di akun Gmail Anda, memberikan kontrol penuh atas status inbox Anda.

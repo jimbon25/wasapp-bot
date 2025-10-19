@@ -32,13 +32,13 @@ const command = {
             
             const validTypes = ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
             if (!validTypes.includes(docMedia.mimetype)) {
-                await message.reply('❌ Please provide a valid Word document (.doc or .docx)');
+                await message.reply('✗ Please provide a valid Word document (.doc or .docx)');
                 return;
             }
 
             const validation = mediaValidator.validateMedia(docMedia);
             if (!validation.valid) {
-                await message.reply(`❌ ${validation.error}`);
+                await message.reply(`✗ ${validation.error}`);
                 logger.warn(`File size validation failed for user ${message.from}: ${validation.error}`);
                 return;
             }
@@ -77,14 +77,14 @@ const command = {
                         });
                     } catch (sendError) {
                         console.error('Error sending message:', sendError);
-                        await message.reply('❌ Failed to send PDF. Error: ' + sendError.message);
+                        await message.reply('✗ Failed to send PDF. Error: ' + sendError.message);
                         throw sendError;
                     }
                 }
             );
         } catch (error) {
             console.error('Error in word2pdf command:', error);
-            await message.reply('❌ Sorry, there was an error converting your document. Please try again.');
+            await message.reply('✗ Sorry, there was an error converting your document. Please try again.');
         }
     }
 };

@@ -11,7 +11,7 @@ export default {
             const chat = await message.getChat();
 
             if (!chat.isGroup) {
-                return message.reply('❌ Perintah ini hanya bisa digunakan di dalam grup.');
+                return message.reply('✗ Perintah ini hanya bisa digunakan di dalam grup.');
             }
 
             const welcomeMessage = args.join(' ');
@@ -27,7 +27,7 @@ export default {
 
         } catch (error) {
             logger.error(`Error pada perintah /setwelcome:`, error);
-            await message.reply('❌ Terjadi kesalahan saat mengatur pesan selamat datang.');
+            await message.reply('✗ Terjadi kesalahan saat mengatur pesan selamat datang.');
         }
     }
 };

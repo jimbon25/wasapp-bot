@@ -9,7 +9,7 @@ import helpHandler from '../handlers/helpHandler.js';
                 await helpHandler.handleCommand(message);
             } catch (error) {
                 logger.error('Error executing help command:', error);
-                   await message.reply('❌ Terjadi kesalahan saat menampilkan menu bantuan.');
+                   await message.reply('✘ Terjadi kesalahan saat menampilkan menu bantuan.');
                 }
             }
         };

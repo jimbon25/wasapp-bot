@@ -11,7 +11,7 @@ export default {
             const chat = await message.getChat();
 
             if (!chat.isGroup) {
-                return message.reply('❌ Perintah ini hanya bisa digunakan di dalam grup.');
+                return message.reply('✗ Perintah ini hanya bisa digunakan di dalam grup.');
             }
 
             let userToKickId;
@@ -25,12 +25,12 @@ export default {
             }
 
             if (!userToKickId) {
-                return message.reply('❌ Tidak dapat menemukan target pengguna.');
+                return message.reply('✗ Tidak dapat menemukan target pengguna.');
             }
             
             const participantToKick = chat.participants.find(p => p.id._serialized === userToKickId);
             if (participantToKick && participantToKick.isAdmin) {
-                return message.reply('❌ Tidak dapat mengeluarkan sesama admin.');
+                return message.reply('✗ Tidak dapat mengeluarkan sesama admin.');
             }
 
             await chat.removeParticipants([userToKickId]);
@@ -39,7 +39,7 @@ export default {
 
         } catch (error) {
             logger.error(`Error on /kick command:`, error);
-            await message.reply('❌ Gagal mengeluarkan anggota. Pastikan bot adalah admin dan target bukan admin lain.');
+            await message.reply('✗ Gagal mengeluarkan anggota. Pastikan bot adalah admin dan target bukan admin lain.');
         }
     }
 };

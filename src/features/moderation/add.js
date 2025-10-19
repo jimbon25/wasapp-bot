@@ -11,7 +11,7 @@ export default {
             const chat = await message.getChat();
 
             if (!chat.isGroup) {
-                return message.reply('❌ Perintah ini hanya bisa digunakan di dalam grup.');
+                return message.reply('✗ Perintah ini hanya bisa digunakan di dalam grup.');
             }
 
             const numberToAdd = args[0];
@@ -33,17 +33,17 @@ export default {
                  logger.info(`User ${userId} was added to group ${chat.name} by ${message.from}.`);
                  await message.reply(`Berhasil menambahkan ${normalizedNumber} ke grup.`);
             } else if (result.code === 403) {
-                 await message.reply(`❌ Gagal menambahkan ${normalizedNumber}. Pengguna tersebut mungkin mengaktifkan setelan privasi grup atau nomornya salah.`);
+                 await message.reply(`✗ Gagal menambahkan ${normalizedNumber}. Pengguna tersebut mungkin mengaktifkan setelan privasi grup atau nomornya salah.`);
             } else if (result.code === 404) {
-                 await message.reply(`❌ Gagal menambahkan ${normalizedNumber}. Nomor tidak terdaftar di WhatsApp.`);
+                 await message.reply(`✗ Gagal menambahkan ${normalizedNumber}. Nomor tidak terdaftar di WhatsApp.`);
             } else {
                  logger.warn(`Failed to add ${userId} with code ${result.code} and message: ${result.message}`);
-                 await message.reply(`❌ Gagal menambahkan ${normalizedNumber}. Kode error: ${result.code || 'Tidak diketahui'}.`);
+                 await message.reply(`✗ Gagal menambahkan ${normalizedNumber}. Kode error: ${result.code || 'Tidak diketahui'}.`);
             }
 
         } catch (error) {
             logger.error(`Error on /add command:`, error);
-            await message.reply('❌ Gagal menambahkan anggota. Pastikan bot adalah admin dan nomor yang dimasukkan valid.');
+            await message.reply('✗ Gagal menambahkan anggota. Pastikan bot adalah admin dan nomor yang dimasukkan valid.');
         }
     }
 };

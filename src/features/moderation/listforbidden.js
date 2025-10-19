@@ -26,7 +26,7 @@ export default {
 
         } catch (error) {
             logger.error(`Error on /listforbidden command:`, error);
-            await message.reply('❌ Terjadi kesalahan saat menampilkan daftar kata terlarang.');
+            await message.reply('✗ Terjadi kesalahan saat menampilkan daftar kata terlarang.');
         }
     }
 };

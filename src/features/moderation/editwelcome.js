@@ -11,14 +11,14 @@ export default {
             const chat = await message.getChat();
 
             if (!chat.isGroup) {
-                return message.reply('❌ Perintah ini hanya bisa digunakan di dalam grup.');
+                return message.reply('✗ Perintah ini hanya bisa digunakan di dalam grup.');
             }
 
             const groupId = chat.id._serialized;
 
             const currentMessage = await welcomeManager.getWelcome(groupId);
             if (!currentMessage) {
-                return message.reply('❌ Grup ini belum memiliki pesan selamat datang. Gunakan /setwelcome untuk membuat pesan baru.');
+                return message.reply('✗ Grup ini belum memiliki pesan selamat datang. Gunakan /setwelcome untuk membuat pesan baru.');
             }
 
             if (args.length === 0) {
@@ -33,7 +33,7 @@ export default {
 
         } catch (error) {
             logger.error(`Error pada perintah /editwelcome:`, error);
-            await message.reply('❌ Terjadi kesalahan saat mengedit pesan selamat datang.');
+            await message.reply('✗ Terjadi kesalahan saat mengedit pesan selamat datang.');
         }
     }
 };

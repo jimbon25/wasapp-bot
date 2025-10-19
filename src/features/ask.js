@@ -23,7 +23,7 @@ export default {
             await message.reply(response);
         } catch (error) {
             logger.error('Error executing ask command:', error);
-            await message.reply('❌ Terjadi kesalahan pada perintah /ask.');
+            await message.reply('✘ Terjadi kesalahan pada perintah /ask.');
         }
     }
 };

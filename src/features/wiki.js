@@ -26,7 +26,7 @@ ${article.url}`;
 
         } catch (error) {
             logger.error(`Error on /wiki command for term "${searchTerm}":`, error);
-            await message.reply(error.message || '❌ Terjadi kesalahan saat menjalankan perintah /wiki.');
+            await message.reply(error.message || '✗ Terjadi kesalahan saat menjalankan perintah /wiki.');
         }
     }
 };

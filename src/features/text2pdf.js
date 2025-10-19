@@ -45,7 +45,7 @@ export default {
 
         } catch (error) {
             logger.error('Error in text2pdf command:', error);
-            await message.reply('❌ Maaf, terjadi kesalahan saat mengkonversi teks ke PDF.');
+            await message.reply('✗ Maaf, terjadi kesalahan saat mengkonversi teks ke PDF.');
             
             try {
                 await Promise.all([

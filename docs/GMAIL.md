@@ -61,8 +61,8 @@ Untuk menggunakan fitur ini, Anda perlu mengkonfigurasi Gmail API dan Google Clo
     *   Beri nama (misal: "Bot WhatsApp Desktop Client").
     *   Klik **Create**.
     *   Setelah client ID dibuat, sebuah pop-up akan muncul. Klik **DOWNLOAD JSON**.
-    *   Ubah nama file yang diunduh menjadi `credentials-gmail-personal.json` (atau nama lain sesuai akun Anda, misal `credentials-gmail-work.json`).
-    *   Pindahkan file ini ke dalam direktori `src/data/credentials/` pada proyek bot Anda.
+    *   Ubah nama file yang diunduh menjadi `credentials-gmail-all.json`. **Penting:** File ini akan digunakan untuk semua akun Gmail yang Anda tambahkan.
+    *   Pindahkan file `credentials-gmail-all.json` ini ke dalam direktori `src/data/credentials/` pada proyek bot Anda.
 
 5.  **Buat Pub/Sub Topic & Subscription**:
     *   Di menu navigasi, cari dan buka **"Pub/Sub"**.
@@ -104,7 +104,9 @@ Untuk menggunakan fitur ini, Anda perlu mengkonfigurasi Gmail API dan Google Clo
 
 ## 3. Langkah 2: Konfigurasi Environment Bot (.env)
 
-Buka file `.env` Anda dan gunakan format berurutan untuk setiap akun Gmail, serta tambahkan konfigurasi Pub/Sub dan Service Account Key.
+Buka file `.env` Anda dan isi variabel-variabel umum untuk fitur Gmail dan Pub/Sub.
+
+**Penting:** Konfigurasi untuk setiap akun Gmail (seperti nama, nomor target, dll.) tidak lagi diatur di dalam file `.env`. Pengaturan tersebut kini dikelola secara dinamis melalui skrip interaktif.
 
 ```env
 # Gmail API Notification Settings
@@ -120,25 +122,9 @@ GOOGLE_CLOUD_PROJECT_ID=your-gcp-project-id
 GMAIL_PUBSUB_TOPIC_NAME=projects/your-gcp-project-id/topics/gmail-realtime-updates
 GMAIL_PUBSUB_SUBSCRIPTION_NAME=projects/your-gcp-project-id/subscriptions/wabot-gmail-listener
 GOOGLE_APPLICATION_CREDENTIALS=src/data/credentials/wabot-pubsub-key.json
-
-# --- Akun Gmail Pertama ---
-GMAIL_ACCOUNT_1_NAME="Pribadi"
-GMAIL_ACCOUNT_1_CREDENTIALS_PATH=src/data/credentials/credentials-gmail-pribadi.json
-GMAIL_ACCOUNT_1_TOKEN_PATH=src/data/credentials/token-gmail-pribadi.json
-GMAIL_ACCOUNT_1_TARGET_NUMBERS=62812xxxx@c.us
-GMAIL_ACCOUNT_1_PROCESSED_LABEL=NotifBot-Pribadi
-
-# --- Akun Gmail Kedua (Opsional) ---
-GMAIL_ACCOUNT_2_NAME="Kerja"
-GMAIL_ACCOUNT_2_CREDENTIALS_PATH=src/data/credentials/credentials-gmail-kerja.json
-GMAIL_ACCOUNT_2_TOKEN_PATH=src/data/credentials/token-gmail-kerja.json
-GMAIL_ACCOUNT_2_TARGET_NUMBERS=62857xxxx@c.us,62813xxxx@c.us
-GMAIL_ACCOUNT_2_PROCESSED_LABEL=NotifBot-Kerja
-
-# ... (Akun Gmail lainnya)
 ```
 
-**Penjelasan Variabel Baru:**
+**Penjelasan Variabel:**
 *   `GMAIL_LEAVE_AS_UNREAD`: Atur ke `true` jika Anda tidak ingin bot menandai email sebagai "telah dibaca".
 *   `GMAIL_NOTIFIED_ID_EXPIRY_DAYS`: (Opsional) Berapa lama (dalam hari) ID email yang sudah dinotifikasi akan disimpan di Redis sebelum dihapus. Defaultnya adalah 30 hari.
 *   `GOOGLE_CLOUD_PROJECT_ID`: ID proyek Google Cloud Anda.
@@ -148,33 +134,50 @@ GMAIL_ACCOUNT_2_PROCESSED_LABEL=NotifBot-Kerja
 
 ---
 
-## 4. Langkah 3: Otorisasi Setiap Akun & Registrasi Push
+## 4. Langkah 3: Menambah dan Mengotorisasi Akun Gmail
 
-Skrip otorisasi kini akan secara otomatis mendaftarkan akun Anda untuk menerima *push notifications* setelah otorisasi berhasil.
+Manajemen dan otorisasi akun Gmail kini dilakukan melalui skrip interaktif yang menyimpan konfigurasi dalam file `src/data/static/gmail_accounts.json`.
 
-1.  **Jalankan Skrip:**
+1.  **Jalankan Skrip Setup:**
     Di terminal, jalankan perintah:
     ```bash
     node scripts/setup-gmail.js
     ```
 
-2.  **Pilih Akun:**
-    Terminal akan menampilkan daftar akun yang Anda konfigurasi di `.env`. Masukkan nomor yang sesuai dengan akun yang ingin Anda otorisasi (misal: `1` untuk "Pribadi").
+2.  **Menu Manajemen Akun:**
+    Anda akan melihat menu untuk mengelola akun Gmail:
+    ```
+    --- Manajemen Akun Gmail --- 
+    Pilih akun untuk diotorisasi atau tambahkan akun baru:
+    1: Pribadi ("✔ Linked")
+    2: Kantor ("✘ Not Linked")
+    -----------------------------------
+    A: Tambah Akun Baru
+    Q: Keluar
+    Pilihan Anda: 
+    ```
 
-3.  **Proses Otorisasi di Browser:**
-    *   Salin URL yang muncul di terminal dan buka di browser.
-    *   Login dengan akun Google yang benar (pastikan sesuai dengan yang Anda pilih).
-    *   Izinkan akses yang diminta.
-    *   Salin kode otorisasi yang ditampilkan.
+3.  **Menambah Akun Baru:**
+    *   Pilih `A` untuk menambahkan akun baru.
+    *   Masukkan **nama pendek** untuk akun tersebut (misal: `Pribadi`, `Kantor`).
+    *   Masukkan **nomor WhatsApp target** untuk notifikasi. Anda bisa memasukkan nomor biasa (contoh: `0812...`) dan skrip akan memformatnya secara otomatis. Pisahkan dengan koma jika lebih dari satu.
+    *   Konfirmasi detailnya. Akun akan ditambahkan ke konfigurasi.
 
-4.  **Masukkan Kode ke Terminal:**
-    *   Tempel kode tersebut di terminal dan tekan Enter.
-    *   Skrip akan membuat file token yang sesuai (misal: `token-gmail-pribadi.json`) dan secara otomatis mendaftarkan akun tersebut untuk *push notifications*.
+4.  **Mengotorisasi Akun:**
+    *   Dari menu utama, pilih nomor akun yang ingin Anda otorisasi (misalnya, `2` untuk `Kantor`).
+    *   Salin **URL otorisasi** yang muncul di terminal dan buka di browser.
+    *   Login dengan akun Google yang sesuai.
+    *   Izinkan akses yang diminta oleh aplikasi.
+    *   Salin **kode otorisasi** yang ditampilkan di halaman browser.
+    *   Tempel kode tersebut kembali ke terminal dan tekan Enter.
 
-5.  **Ulangi untuk Akun Lain:**
-    Jalankan kembali `node scripts/setup-gmail.js` dan pilih akun lain (misal: `2` untuk "Kerja") untuk mengotorisasinya. Lakukan ini sampai semua akun Anda memiliki file token-nya masing-masing dan terdaftar untuk *push notifications*.
+5.  **Proses Selesai:**
+    *   Skrip akan membuat file token (misal: `token-gmail-kantor.json`) di `src/data/credentials/`.
+    *   Akun tersebut juga akan secara otomatis terdaftar untuk menerima *push notifications*.
+    *   Ulangi proses ini untuk semua akun yang ingin Anda pantau.
 
-6.  **Restart Bot:** Setelah semua akun diotorisasi, restart bot Anda.
+6.  **Selesai & Restart Otomatis:**
+    Setelah Anda selesai menambah, menghapus, atau mengotorisasi akun, bot akan secara otomatis mendeteksi perubahan tersebut. Dalam beberapa detik, bot akan me-restart dirinya sendiri untuk menerapkan konfigurasi baru. **Anda tidak perlu lagi me-restart bot secara manual.**
 
 ---
 
@@ -248,13 +251,14 @@ By using this feature, you agree to assume all risks and responsibilities associ
     *   **Solusi:** Ini adalah perilaku normal. Email yang memicu pesan ini tidak akan diproses saat ini, tetapi semua email baru yang masuk setelahnya akan diproses dengan normal. Kirim email tes baru untuk memverifikasi.
 
 -   **Salah satu akun saya tidak muncul saat menjalankan `setup-gmail.js`?**
-    *   **Penyebab:** Kemungkinan besar ada kesalahan penomoran pada nama variabel di file `.env`.
-    *   **Solusi:** Periksa kembali file `.env` Anda. Pastikan Anda menggunakan awalan `GMAIL_ACCOUNT_1_...`, `GMAIL_ACCOUNT_2_...`, `GMAIL_ACCOUNT_3_...`, dan seterusnya secara berurutan tanpa ada nomor yang terlewat atau terduplikasi.
+    *   **Penyebab:** Konfigurasi akun disimpan di `src/data/static/gmail_accounts.json`. Jika file ini rusak atau akun tidak terdaftar dengan benar, ia tidak akan muncul.
+    *   **Solusi:** Coba tambahkan kembali akun melalui menu "Tambah Akun Baru" di dalam skrip `setup-gmail.js`. Jika masalah berlanjut, periksa file `src/data/static/gmail_accounts.json` secara manual.
 
 -   **Notifikasi tidak muncul untuk salah satu akun?**
-    *   Pastikan `GMAIL_ENABLED=true`.
-    *   Pastikan `GMAIL_ACCOUNT_X_TARGET_NUMBERS` untuk akun tersebut sudah diisi dengan benar.
-    *   Pastikan file `credentials-gmail-namaakun.json` dan `token-gmail-namaakun.json` ada di direktori yang benar dan sudah diotorisasi.
+    *   Pastikan `GMAIL_ENABLED=true` di file `.env`.
+    *   Jalankan `node scripts/setup-gmail.js` dan pastikan akun yang dimaksud memiliki status `✔ Linked`. Jika tidak, lakukan otorisasi ulang.
+    *   Periksa file `src/data/static/gmail_accounts.json` dan pastikan `targetNumbers` untuk akun tersebut sudah benar.
+    *   Pastikan file kredensial utama (`credentials-gmail-all.json`) dan file token spesifik akun (`token-gmail-namaakun.json`) ada di direktori `src/data/credentials/`.
 
 -   **Kenapa email saya tetap belum dibaca padahal notifikasi sudah masuk?**
     *   **Penyebab:** Ini adalah perilaku baru yang bisa dikonfigurasi. Kemungkinan Anda mengaktifkan `GMAIL_LEAVE_AS_UNREAD=true` di file `.env` Anda.

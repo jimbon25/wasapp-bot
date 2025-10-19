@@ -10,7 +10,7 @@ export default {
             const chat = await message.getChat();
 
             if (!chat.isGroup) {
-                return message.reply('❌ Perintah ini hanya bisa digunakan di dalam grup.');
+                return message.reply('✗ Perintah ini hanya bisa digunakan di dalam grup.');
             }
 
             const groupId = chat.id._serialized;
@@ -22,7 +22,7 @@ export default {
 
         } catch (error) {
             logger.error(`Error on /groupid command:`, error);
-            await message.reply('❌ Terjadi kesalahan saat mengambil ID grup.');
+            await message.reply('✗ Terjadi kesalahan saat mengambil ID grup.');
         }
     }
 };

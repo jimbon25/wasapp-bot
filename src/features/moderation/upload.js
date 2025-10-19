@@ -16,12 +16,12 @@ export default {
         const senderId = message.author || message.from; // Needed for Mega auth
 
         if (!target || !validTargets.includes(target)) {
-            return message.reply('❌ Format salah. Gunakan `/upload drive`, `/upload mega`, atau `/upload cancel`.');
+            return message.reply('✗ Format salah. Gunakan `/upload drive`, `/upload mega`, atau `/upload cancel`.');
         }
 
         const chat = await message.getChat();
         if (!chat.isGroup) {
-            return message.reply('❌ Perintah ini hanya bisa digunakan di dalam grup.');
+            return message.reply('✗ Perintah ini hanya bisa digunakan di dalam grup.');
         }
         
         const batchKey = uploadBatchManager.createBatchKey(chat.id._serialized);
@@ -40,18 +40,18 @@ export default {
         }
 
         if (!message.hasQuotedMsg) {
-            return message.reply('❌ Perintah `/upload drive` atau `/upload mega` harus digunakan dengan membalas pesan konfirmasi dari bot.');
+            return message.reply('✗ Perintah `/upload drive` atau `/upload mega` harus digunakan dengan membalas pesan konfirmasi dari bot.');
         }
         
         const quotedMsg = await message.getQuotedMessage();
         if (!quotedMsg.fromMe) {
-             return message.reply('❌ Perintah ini hanya valid jika digunakan untuk membalas pesan prompt dari bot.');
+             return message.reply('✗ Perintah ini hanya valid jika digunakan untuk membalas pesan prompt dari bot.');
         }
 
         const batch = uploadBatchManager.getBatch(batchKey);
 
         if (!batch || batch.messages.length === 0) {
-            return message.reply('❌ Tidak ada sesi upload aktif atau file dalam batch. Sesi mungkin sudah kedaluwarsa atau dibatalkan.');
+            return message.reply('✗ Tidak ada sesi upload aktif atau file dalam batch. Sesi mungkin sudah kedaluwarsa atau dibatalkan.');
         }
 
         const fileCount = batch.messages.length;
@@ -107,7 +107,7 @@ export default {
 
         } catch (error) {
             logger.error(`Error on bulk /upload command:`, error);
-            await message.reply(`❌ Gagal mengupload batch file. Alasan: ${error.message}`);
+            await message.reply(`✗ Gagal mengupload batch file. Alasan: ${error.message}`);
         } finally {
             uploadBatchManager.deleteBatch(batchKey);
         }

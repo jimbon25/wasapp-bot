@@ -18,12 +18,12 @@ export default {
             if (added) {
                 await message.reply(` Kata "${word}" telah ditambahkan ke daftar terlarang.`);
             } else {
-                await message.reply(`❌ Gagal menambahkan kata "${word}" ke daftar terlarang. Mungkin sudah ada atau terjadi kesalahan.`);
+                await message.reply(`✗ Gagal menambahkan kata "${word}" ke daftar terlarang. Mungkin sudah ada atau terjadi kesalahan.`);
             }
 
         } catch (error) {
             logger.error(`Error on /addforbidden command:`, error);
-            await message.reply('❌ Terjadi kesalahan saat menambahkan kata terlarang.');
+            await message.reply('✗ Terjadi kesalahan saat menambahkan kata terlarang.');
         }
     }
 };

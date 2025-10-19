@@ -14,7 +14,7 @@ async function handleMediaMessage(message) {
 
         const userCredentials = await megaAuthService.getCredentials(userId);
         if (!userCredentials) {
-            await message.reply('❌ Akun Mega.nz Anda tidak terhubung. Silakan login dengan `/mega login <email> <password>` di chat pribadi dengan bot.');
+            await message.reply('✗ Akun Mega.nz Anda tidak terhubung. Silakan login dengan `/mega login <email> <password>` di chat pribadi dengan bot.');
             await megaSessionService.endSession(userId); // End session if credentials are gone
             return true;
         }
@@ -35,9 +35,9 @@ async function handleMediaMessage(message) {
         return true;
 
     } catch (error) {
-        await message.react('❌');
+        await message.react('✗');
         logger.error('Error handling Mega media message:', error);
-        await message.reply(`❌ Gagal mengupload file ke sesi Mega.\nAlasan: ${error.message}`);
+        await message.reply(`✗ Gagal mengupload file ke sesi Mega.\nAlasan: ${error.message}`);
         return true;
     } finally {
         if (tempFilePath) {
@@ -65,7 +65,7 @@ export default {
             // --- Credential Management Commands ---
             if (args[0] === 'login') {
                 if (chat.isGroup) {
-                    return message.reply('❌ Perintah ini hanya bisa digunakan di chat pribadi dengan bot untuk keamanan.');
+                    return message.reply('✗ Perintah ini hanya bisa digunakan di chat pribadi dengan bot untuk keamanan.');
                 }
                 if (args.length !== 3) {
                     return message.reply('Format salah. Gunakan: `/mega login <email> <password>`');
@@ -105,7 +105,7 @@ export default {
             // --- Session and Upload Commands ---
             const userCredentials = await megaAuthService.getCredentials(userId);
             if (!userCredentials) {
-                return message.reply('❌ Akun Mega.nz Anda belum terhubung. Silakan login terlebih dahulu dengan: `/mega login <email> <password>` di chat pribadi dengan bot.');
+                return message.reply('✗ Akun Mega.nz Anda belum terhubung. Silakan login terlebih dahulu dengan: `/mega login <email> <password>` di chat pribadi dengan bot.');
             }
 
             if (args[0] === 'start') {
@@ -153,7 +153,7 @@ export default {
 
         } catch (error) {
             logger.error('Error in /mega command:', error);
-            await message.reply(`❌ Terjadi kesalahan pada perintah Mega.\nAlasan: ${error.message}`);
+            await message.reply(`✗ Terjadi kesalahan pada perintah Mega.\nAlasan: ${error.message}`);
         }
     }
 };

@@ -36,7 +36,7 @@ export default {
 
                 case 'download':
                     if (!message.hasQuotedMsg) {
-                        return message.reply('❌ Perintah ini harus digunakan dengan membalas pesan notifikasi Gmail yang berisi lampiran.');
+                        return message.reply('✗ Perintah ini harus digunakan dengan membalas pesan notifikasi Gmail yang berisi lampiran.');
                     }
 
                     const quotedMsg = await message.getQuotedMessage();
@@ -45,12 +45,12 @@ export default {
                     const contextData = await redisClient.get(contextKey);
 
                     if (!contextData) {
-                        return message.reply('❌ Konteks untuk notifikasi ini tidak ditemukan atau sudah kedaluwarsa. Mohon coba dengan notifikasi yang lebih baru.');
+                        return message.reply('✗ Konteks untuk notifikasi ini tidak ditemukan atau sudah kedaluwarsa. Mohon coba dengan notifikasi yang lebih baru.');
                     }
 
                     const context = JSON.parse(contextData);
                     if (!context.attachments || context.attachments.length === 0) {
-                        return message.reply('❌ Email ini tidak memiliki lampiran untuk diunduh.');
+                        return message.reply('✗ Email ini tidak memiliki lampiran untuk diunduh.');
                     }
 
                     let attachmentToDownload;
@@ -70,7 +70,7 @@ export default {
                     }
 
                     if (!attachmentToDownload) {
-                        return message.reply(`❌ Lampiran dengan nomor ${attachmentIndex} tidak ditemukan.`);
+                        return message.reply(`✗ Lampiran dengan nomor ${attachmentIndex} tidak ditemukan.`);
                     }
 
                     await message.reply(`⏳ Mengunduh lampiran \"${attachmentToDownload.filename}\"...`);

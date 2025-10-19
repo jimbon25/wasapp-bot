@@ -105,7 +105,7 @@ class Logger {
             message;
             
         const logMessage = this.formatMessage('error', messageText, error);
-        console.error(`❌ ${messageText}`);
+        console.error(`✗ ${messageText}`);
         if (error) {
             console.error(error);
         }

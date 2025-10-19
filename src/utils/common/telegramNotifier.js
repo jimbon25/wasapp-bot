@@ -61,7 +61,7 @@ class TelegramNotifier {
     }
 
     async error(message, error = null) {
-        const errorTitle = this.escapeMarkdown('❌ ERROR');
+        const errorTitle = this.escapeMarkdown('✗ ERROR');
         const errorMsg = this.escapeMarkdown(message);
         let formattedMessage = `${errorTitle}\n${errorMsg}`;
         

@@ -57,12 +57,12 @@ export default {
                 await message.reply('File berhasil dikirim!');
             } catch (error) {
                 logger.error('Error sending file:', error);
-                await message.reply('❌ Gagal mengirim file. Silakan coba lagi atau hubungi admin.');
+                await message.reply('✘ Gagal mengirim file. Silakan coba lagi atau hubungi admin.');
             }
 
         } catch (error) {
             logger.error('Error in /download command:', error);
-            const errorMessage = `❌ Gagal mengunduh konten.
+            const errorMessage = `✘ Gagal mengunduh konten.
 Alasan: ${error.message}`.substring(0, 200);
             if (statusMsg) {
                 await statusMsg.edit(errorMessage);

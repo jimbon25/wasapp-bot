@@ -192,7 +192,7 @@ class GmailService {
                     if (record.messagesAdded) {
                         for (const msg of record.messagesAdded) {
                             // Check if the message is unread before processing
-                            const isUnread = msg.message.labelIds.includes('UNREAD');
+                            const isUnread = msg.message && Array.isArray(msg.message.labelIds) && msg.message.labelIds.includes('UNREAD');
                             if (isUnread) {
                                 await this.sendNotificationForMessage(clientData, msg.message.id, whatsappClient);
                             }

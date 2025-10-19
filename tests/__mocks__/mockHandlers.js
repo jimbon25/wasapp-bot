@@ -16,7 +16,7 @@ const commandHandler = {
         if (command.adminOnly) {
             const isAdmin = await SecurityManager.isAuthorized(message.from, 'admin');
             if (!isAdmin) {
-                await message.reply('❌ Anda tidak memiliki izin untuk menggunakan perintah ini.');
+                await message.reply('✗ Anda tidak memiliki izin untuk menggunakan perintah ini.');
                 return { handled: false, reason: 'unauthorized' };
             }
         }
@@ -25,7 +25,7 @@ const commandHandler = {
             for (const permission of command.requiredPermissions) {
                 const hasPermission = await SecurityManager.hasPermission(message.from, permission);
                 if (!hasPermission) {
-                    await message.reply('❌ Anda tidak memiliki izin yang diperlukan untuk perintah ini.');
+                    await message.reply('✗ Anda tidak memiliki izin yang diperlukan untuk perintah ini.');
                     return { handled: false, reason: 'permission-denied' };
                 }
             }

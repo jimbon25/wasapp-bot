@@ -37,7 +37,7 @@ async function testRedisConnection() {
         console.log(' Redis Connection:', success ? 'Success' : 'Failed');
         return success;
     } catch (error) {
-        console.error('❌ Redis Connection Error:', error.message);
+        console.error('✗ Redis Connection Error:', error.message);
         console.error('Error Stack:', error.stack);
         return false;
     }
@@ -61,7 +61,7 @@ async function testMessageQueue() {
             msg1.test === 'message1' && msg2.test === 'message2' ? 'Success' : 'Failed');
         return true;
     } catch (error) {
-        console.error('❌ Message Queue Test Error:', error.message);
+        console.error('✗ Message Queue Test Error:', error.message);
         return false;
     }
 }
@@ -88,7 +88,7 @@ async function testRateLimiting() {
             allowed1 && !allowed2 ? 'Success' : 'Failed');
         return true;
     } catch (error) {
-        console.error('❌ Rate Limiting Test Error:', error.message);
+        console.error('✗ Rate Limiting Test Error:', error.message);
         return false;
     }
 }
@@ -110,7 +110,7 @@ async function testSessionBackup() {
             JSON.stringify(restored) === JSON.stringify(testSession) ? 'Success' : 'Failed');
         return true;
     } catch (error) {
-        console.error('❌ Session Backup Test Error:', error.message);
+        console.error('✗ Session Backup Test Error:', error.message);
         return false;
     }
 }
@@ -138,7 +138,7 @@ async function testCachePerformance() {
             `(${timePerOp.toFixed(3)}ms per operation)`);
         return true;
     } catch (error) {
-        console.error('❌ Cache Performance Test Error:', error.message);
+        console.error('✗ Cache Performance Test Error:', error.message);
         return false;
     }
 }
@@ -160,7 +160,7 @@ async function testMonitoring() {
             metrics.length > 0 && health.status ? 'Success' : 'Failed');
         return true;
     } catch (error) {
-        console.error('❌ Monitoring Test Error:', error.message);
+        console.error('✗ Monitoring Test Error:', error.message);
         return false;
     }
 }

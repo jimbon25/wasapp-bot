@@ -11,7 +11,7 @@ export default {
 
         } catch (error) {
             logger.error('Error executing rmbg command:', error);
-            await message.reply('❌ Terjadi kesalahan saat memproses perintah remove background.');
+            await message.reply('✘ Terjadi kesalahan saat memproses perintah remove background.');
         }
     }
 };

@@ -11,7 +11,7 @@ export default {
             const chat = await message.getChat();
 
             if (!chat.isGroup) {
-                return message.reply('❌ Perintah ini hanya bisa digunakan di dalam grup.');
+                return message.reply('✗ Perintah ini hanya bisa digunakan di dalam grup.');
             }
 
             const inviteCode = await chat.getInviteCode();
@@ -22,7 +22,7 @@ export default {
 
         } catch (error) {
             logger.error("Error on /link command:", error);
-            await message.reply('❌ Gagal mendapatkan link undangan. Pastikan bot adalah admin di grup ini.');
+            await message.reply('✗ Gagal mendapatkan link undangan. Pastikan bot adalah admin di grup ini.');
         }
     }
 };

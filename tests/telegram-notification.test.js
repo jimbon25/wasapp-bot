@@ -45,7 +45,7 @@ async function testTelegramNotifications() {
         console.log('Please check your Telegram chat/group to verify the notifications.');
 
     } catch (error) {
-        console.error('❌ Test failed:', error);
+        console.error('✗ Test failed:', error);
     }
 }
 

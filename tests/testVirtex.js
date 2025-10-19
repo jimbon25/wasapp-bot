@@ -45,7 +45,7 @@ for (const test of testCases) {
         console.log(` ${test.name}: PASSED`);
     } else {
         failed++;
-        console.log(`❌ ${test.name}: FAILED`);
+        console.log(`✗ ${test.name}: FAILED`);
         console.log('Expected:', test.expectVirtex ? 'virtex' : 'not virtex');
         console.log('Got:', result.isVirtex ? 'virtex' : 'not virtex');
         if (result.reasons) console.log('Reasons:', result.reasons);

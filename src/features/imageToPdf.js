@@ -12,7 +12,7 @@ const { MessageMedia } = pkg;
  */
 async function convertAndSendPdf(msg, media) {
     if (!media || !media.mimetype.startsWith('image/')) {
-        await msg.reply('❌ File yang dikirim bukan gambar. Mohon kirim file gambar yang valid.');
+        await msg.reply('✘ File yang dikirim bukan gambar. Mohon kirim file gambar yang valid.');
         return;
     }
 
@@ -45,9 +45,9 @@ async function convertAndSendPdf(msg, media) {
     } catch (error) {
         logger.error('Error creating/sending PDF:', error);
         if (error.message.includes('too large')) {
-            await msg.reply('❌ Ukuran PDF terlalu besar (maksimal 16MB). Mohon kompres gambar terlebih dahulu.');
+            await msg.reply('✘ Ukuran PDF terlalu besar (maksimal 16MB). Mohon kompres gambar terlebih dahulu.');
         } else {
-            await msg.reply('❌ Terjadi kesalahan saat membuat atau mengirim PDF. Silakan coba lagi.');
+            await msg.reply('✘ Terjadi kesalahan saat membuat atau mengirim PDF. Silakan coba lagi.');
         }
     } finally {
         if (imagePath) {
@@ -78,7 +78,7 @@ export default {
 
         } catch (error) {
             logger.error('Error in /topdf command execution:', error);
-            await msg.reply('❌ Terjadi kesalahan saat memproses permintaan Anda.');
+            await msg.reply('✘ Terjadi kesalahan saat memproses permintaan Anda.');
         }
     }
 };

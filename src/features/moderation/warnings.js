@@ -10,7 +10,7 @@ export default {
         try {
             const chat = await message.getChat();
             if (!chat.isGroup) {
-                return message.reply('❌ Perintah ini hanya bisa digunakan di dalam grup.');
+                return message.reply('✗ Perintah ini hanya bisa digunakan di dalam grup.');
             }
 
             let targetUserId;
@@ -25,7 +25,7 @@ export default {
             }
 
             if (!targetUserId) {
-                return message.reply('❌ Tidak dapat menemukan target pengguna.');
+                return message.reply('✗ Tidak dapat menemukan target pengguna.');
             }
 
             const groupId = chat.id._serialized;
@@ -47,7 +47,7 @@ export default {
 
         } catch (error) {
             logger.error(`Error on /warnings command:`, error);
-            await message.reply('❌ Terjadi kesalahan saat memeriksa peringatan.');
+            await message.reply('✗ Terjadi kesalahan saat memeriksa peringatan.');
         }
     }
 };

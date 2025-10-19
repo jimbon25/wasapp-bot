@@ -37,7 +37,7 @@ export default {
             return true;
         } catch (error) {
             logger.error('Error handling image message:', error);
-            await msg.reply('❌ Terjadi kesalahan saat memproses gambar.');
+            await msg.reply('✗ Terjadi kesalahan saat memproses gambar.');
             return true;
         }
     }

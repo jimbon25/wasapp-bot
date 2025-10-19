@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -36,25 +37,19 @@ const config = {
       subscriptionName: process.env.GMAIL_PUBSUB_SUBSCRIPTION_NAME,
       notifiedIdExpiryDays: parseInt(process.env.GMAIL_NOTIFIED_ID_EXPIRY_DAYS, 10) || 30,
       accounts: (() => {
-        const accounts = [];
-        for (let i = 1; i <= 5; i++) { // Allow up to 5 accounts
-          const name = process.env[`GMAIL_ACCOUNT_${i}_NAME`];
-          const credentialsPath = process.env[`GMAIL_ACCOUNT_${i}_CREDENTIALS_PATH`];
-          const tokenPath = process.env[`GMAIL_ACCOUNT_${i}_TOKEN_PATH`];
-
-          if (name && credentialsPath && tokenPath) {
-            accounts.push({
-              name,
-              credentialsPath,
-              tokenPath,
-              targetNumbers: (process.env[`GMAIL_ACCOUNT_${i}_TARGET_NUMBERS`] || '').split(',').filter(n => n),
-              processedLabel: process.env[`GMAIL_ACCOUNT_${i}_PROCESSED_LABEL`] || `Wabot-Notif-${name.replace(/\s+/g, '')}`,
-            });
-          } else {
-            break; 
+        try {
+          const jsonPath = join(__dirname, './data/static/gmail_accounts.json');
+          const jsonData = fs.readFileSync(jsonPath, 'utf8');
+          const jsonAccounts = JSON.parse(jsonData);
+          if (Array.isArray(jsonAccounts) && jsonAccounts.length > 0) {
+            return jsonAccounts;
           }
+        } catch (error) {
+          // Ignore error if file doesn't exist or is invalid
         }
-        return accounts;
+
+        // Return an empty array if JSON is not found or is empty
+        return [];
       })(),
     },
     jikan: {

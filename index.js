@@ -11,6 +11,8 @@ import { redisManager, fallbackConfig } from './src/utils/redis/index.js';
 import config from './src/config.js';
 import { runDataMigration } from './src/startup/migration.js'; // New import
 import { setupClient } from './src/startup/clientSetup.js'; // New import
+import fs from 'fs';
+import path from 'path';
 
 // Load environment variables
 dotenv.config();
@@ -68,6 +70,51 @@ process.on('unhandledRejection', (error) => {
     logger.error('Unhandled Promise Rejection:', error);
 });
 
+/**
+ * Watches for configuration changes and triggers a graceful restart.
+ * @param {import('whatsapp-web.js').Client} client - The WhatsApp client instance.
+ */
+function startFileWatcher(client) {
+    const configPaths = [
+        path.join(process.cwd(), 'src', 'data', 'static', 'gmail_accounts.json'),
+        path.join(process.cwd(), 'src', 'data', 'credentials')
+    ];
+
+    let debounceTimer = null;
+    const restartBot = async () => {
+        logger.warn('Configuration change detected. Restarting bot to apply changes...');
+        if (client) {
+            try {
+                await client.destroy();
+                logger.info('WhatsApp client destroyed.');
+            } catch (e) {
+                logger.error('Error destroying client during restart:', e);
+            }
+        }
+        process.exit(0); // Exit gracefully, systemd will handle the restart
+    };
+
+    const handleFileChange = (eventType, filename) => {
+        // We only care about token files in the credentials directory
+        if (filename && !filename.startsWith('token-gmail-')) {
+            return;
+        }
+        logger.info(`File change detected in configuration files: ${filename || 'directory'} (${eventType})`);
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(restartBot, 5000); // Wait 5 seconds to prevent rapid restarts
+    };
+
+    configPaths.forEach(configPath => {
+        if (fs.existsSync(configPath)) {
+            fs.watch(configPath, { recursive: true }, handleFileChange);
+            logger.info(`Watching for changes in: ${configPath}`);
+        } else {
+            logger.warn(`Could not watch path, as it does not exist: ${configPath}`);
+        }
+    });
+}
+
+
 // Initialize the client with session handling and retry mechanism
 async function initializeClient() {
     try {
@@ -98,6 +145,10 @@ async function initializeClient() {
                 }
             }
         }
+
+        // Start watching for config changes to auto-restart
+        startFileWatcher(client);
+
     } catch (error) {
         logger.error('Failed to initialize client after all retries:', error);
         process.exit(1);

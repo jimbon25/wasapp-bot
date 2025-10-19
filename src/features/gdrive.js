@@ -52,11 +52,11 @@ export default {
                 await message.react('');
                 return true;
             } catch (error) {
-                await message.react('❌');
+                await message.react('✘');
                 if (error.message.includes('rate limit')) {
                     await message.reply('⚠️ Google Drive API rate limit terlampaui. Mohon coba lagi nanti.');
                 } else {
-                    await message.reply('❌ Terjadi kesalahan saat mengupload file. Mohon coba lagi.');
+                    await message.reply('✘ Terjadi kesalahan saat mengupload file. Mohon coba lagi.');
                     logger.error('Error uploading media in session:', error);
                 }
                 return true;
@@ -70,7 +70,7 @@ export default {
                 }
             }
         } catch (error) {
-            await message.react('❌');
+            await message.react('✘');
             logger.error('Error handling media message:', error);
             return false;
         }
@@ -108,7 +108,7 @@ export default {
                 const existingFolder = await driveFolderService.getFolder(userId, targetFolderName);
                 
                 if (!existingFolder) {
-                    await message.reply(`❌ Folder "${targetFolderName}" tidak ditemukan!`);
+                    await message.reply(`✘ Folder "${targetFolderName}" tidak ditemukan!`);
                     return;
                 }
 
@@ -137,7 +137,7 @@ export default {
                 if (renamed) {
                     await message.reply(` Folder "${oldName}" telah diubah menjadi "${newName}"`);
                 } else {
-                    await message.reply(`❌ Folder "${oldName}" tidak ditemukan!`);
+                    await message.reply(`✘ Folder "${oldName}" tidak ditemukan!`);
                 }
                 return;
             }
@@ -175,7 +175,7 @@ export default {
                     await message.reply(` Sesi upload dimulai!\n\nFolder: ${folderName}\nSilakan kirim foto/media yang ingin diupload.\nKetik /gdrive done untuk mengakhiri sesi.`);
                     return;
                 } catch (error) {
-                    await message.reply('❌ Gagal membuat folder di Google Drive. Mohon coba lagi.');
+                    await message.reply('✘ Gagal membuat folder di Google Drive. Mohon coba lagi.');
                     throw error;
                 }
             }
@@ -222,7 +222,7 @@ export default {
                 } else if (error.message.includes('File size exceeds')) {
                     await message.reply('⚠️ Ukuran file terlalu besar. Mohon kirim file yang lebih kecil.');
                 } else {
-                    await message.reply('❌ Terjadi kesalahan saat mengupload file. Mohon coba lagi.');
+                    await message.reply('✘ Terjadi kesalahan saat mengupload file. Mohon coba lagi.');
                 }
                 throw error;
             } finally {

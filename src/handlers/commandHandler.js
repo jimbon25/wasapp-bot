@@ -71,7 +71,7 @@ class CommandHandler {
                 if (!isAuthorized) {
                     const contact = await message.getContact();
                     logger.warn(`Unauthorized access attempt for admin command '${commandName}' by ${contact.id._serialized}`);
-                    await message.reply('❌ Anda tidak memiliki izin untuk menggunakan perintah ini.');
+                    await message.reply('✗ Anda tidak memiliki izin untuk menggunakan perintah ini.');
                     return { handled: false, reason: 'unauthorized' };
                 }
             }
@@ -82,7 +82,7 @@ class CommandHandler {
                     if (!hasPermission) {
                         const contact = await message.getContact();
                         logger.warn(`Permission denied for command '${commandName}' by ${contact.id._serialized} (missing: ${permission})`);
-                        await message.reply('❌ Anda tidak memiliki izin yang diperlukan untuk perintah ini.');
+                        await message.reply('✗ Anda tidak memiliki izin yang diperlukan untuk perintah ini.');
                         return { handled: false, reason: 'permission-denied' };
                     }
                 }

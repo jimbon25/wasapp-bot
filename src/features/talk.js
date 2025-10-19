@@ -23,7 +23,7 @@ export default {
             await message.reply(response);
         } catch (error) {
             logger.error('Error executing talk command:', error);
-            await message.reply('❌ Terjadi kesalahan pada perintah /talk.');
+            await message.reply('✗ Terjadi kesalahan pada perintah /talk.');
         }
     }
 };
