@@ -180,7 +180,7 @@ Skrip otorisasi kini akan secara otomatis mendaftarkan akun Anda untuk menerima 
 
 ## 5. Kontrol Dinamis (Perintah Admin)
 
-Anda dapat mengaktifkan atau menonaktifkan seluruh fitur notifikasi Gmail secara dinamis melalui perintah WhatsApp tanpa perlu me-restart bot. Perintah ini hanya bisa digunakan oleh admin.
+Anda dapat mengelola fitur notifikasi Gmail secara dinamis melalui perintah WhatsApp tanpa perlu me-restart bot. Perintah ini hanya bisa digunakan oleh admin.
 
 -   `/gmail on`
     Mengaktifkan kembali layanan notifikasi Gmail.
@@ -191,7 +191,10 @@ Anda dapat mengaktifkan atau menonaktifkan seluruh fitur notifikasi Gmail secara
 -   `/gmail status`
     Mengecek status layanan saat ini (apakah sedang aktif atau tidak).
 
-Status ini akan tersimpan, bahkan jika bot di-restart. Status default saat pertama kali dijalankan akan mengikuti nilai `GMAIL_ENABLED` di file `.env` Anda.
+-   `/gmail download [nomor]` (hanya dengan me-reply notifikasi)
+    Mengunduh lampiran dari email yang notifikasinya Anda balas. Jika email memiliki lebih dari satu lampiran, sertakan nomor lampiran yang ingin diunduh.
+
+Status on/off ini akan tersimpan, bahkan jika bot di-restart. Status default saat pertama kali dijalankan akan mengikuti nilai `GMAIL_ENABLED` di file `.env` Anda.
 
 ---
 

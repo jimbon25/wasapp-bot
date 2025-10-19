@@ -229,11 +229,13 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Fitur Baru (Features)
 
+*   **Unduh Lampiran Gmail**: Pengguna sekarang dapat mengunduh lampiran email langsung dari WhatsApp dengan membalas pesan notifikasi Gmail menggunakan perintah `/gmail download [nomor]`.
 *   **Pembatalan Auto-Upload**: Menambahkan perintah baru `/upload cancel`. Admin sekarang dapat membatalkan sesi pengumpulan media untuk fitur `AUTO_UPLOAD` sebelum bot mengirimkan prompt konfirmasi.
 
 #### Perubahan & Peningkatan (Changes & Improvements)
 
 *   **Peningkatan Notifikasi Gmail**:
+    *   Notifikasi sekarang menampilkan daftar lampiran yang ada di email.
     *   Bot kini dapat mengirim notifikasi email **tanpa harus menandai email sebagai 'telah dibaca'** di akun Gmail Anda, memberikan kontrol penuh atas status inbox Anda.
     *   Perilaku ini dapat diaktifkan melalui variabel baru di `.env`: `GMAIL_LEAVE_AS_UNREAD=true`.
     *   Masa kedaluwarsa untuk jejak notifikasi di Redis kini juga dapat diatur melalui `GMAIL_NOTIFIED_ID_EXPIRY_DAYS`.
@@ -244,4 +246,5 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Perbaikan Bug (Fixes)
 
+*   **Pengunduhan Lampiran Gmail**: Memperbaiki error `atob` yang terjadi karena salah encoding `base64`. Lampiran sekarang dapat diunduh dengan benar.
 *   **Perintah Admin pada Batch**: Memperbaiki bug di mana admin tidak dapat menjalankan perintah pada batch media yang dimulai oleh member biasa.

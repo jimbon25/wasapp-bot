@@ -220,7 +220,7 @@ class GmailService {
         try {
             const isNotified = await redisClient.sismember(notifiedIdsKey, messageId);
             if (isNotified) {
-                logger.info(`Skipping notification for already processed email ${messageId} for account "${clientData.name}".`);
+                logger.info(`Skipping notification for already processed email ${messageId} for account \"${clientData.name}\".`);
                 return;
             }
 
@@ -230,20 +230,47 @@ class GmailService {
             const receivedDate = new Date(parseInt(details.internalDate));
             const timestamp = receivedDate.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 
-            const notifMessage = `*GMAIL NOTIFICATION*\n` +
+            let notifMessage = `*GMAIL NOTIFICATION*\n` +
                                  `━━━━━━━━━━━━━\n\n` +
                                  `*Akun:* _${clientData.name}_\n` +
                                  `*Waktu:* ${timestamp}\n` +
                                  `*Dari:* ${details.from}\n\n` +
                                  `*Subjek:* ${details.subject}\n\n` +
-                                 `*Pesan:* _${details.snippet}_\n\n` +
-                                 `*Lihat Pesan:* ${details.messageUrl}\n\n`;
+                                 `*Pesan:* _${details.snippet}_\n\n`;
+
+            if (details.attachments.length > 0) {
+                notifMessage += `*Lampiran:*\n`;
+                details.attachments.forEach((att, index) => {
+                    const fileSize = (att.size / 1024).toFixed(2); // KB
+                    notifMessage += `${index + 1}. ${att.filename} (${fileSize} KB)\n`;
+                });
+                notifMessage += `\nBalas pesan ini dengan \`/gmail download [nomor]\` untuk mengunduh lampiran.\n`;
+            }
+
+            notifMessage += `\n*Lihat Pesan:* ${details.messageUrl}\n\n`;
 
             for (const targetNumber of clientData.targetNumbers) {
                 if (targetNumber) {
                     try {
-                        await whatsappClient.sendMessage(targetNumber, notifMessage);
-                        logger.info(`Sent Gmail notification from "${clientData.name}" to ${targetNumber}`);
+                        const sentMsg = await whatsappClient.sendMessage(targetNumber, notifMessage);
+                        logger.info(`Sent Gmail notification from \"${clientData.name}\" to ${targetNumber}`);
+
+                        // Store context for reply-based download
+                        if (details.attachments.length > 0) {
+                            const context = {
+                                accountName: clientData.name, // Add account name to context
+                                gmailMessageId: messageId,
+                                attachments: details.attachments.map((att, index) => ({
+                                    index: index + 1,
+                                    id: att.id,
+                                    filename: att.filename,
+                                    mimetype: att.mimetype
+                                }))
+                            };
+                            const contextKey = `gmail_notif:${sentMsg.id._serialized}`;
+                            await redisClient.set(contextKey, JSON.stringify(context), 'EX', 86400); // 24 hour expiry
+                        }
+
                     } catch (error) {
                         logger.error(`Failed to send Gmail notification to ${targetNumber}:`, error);
                     }
@@ -266,13 +293,34 @@ class GmailService {
             const response = await clientData.gmail.users.messages.get({
                 userId: 'me',
                 id: messageId,
-                format: 'metadata',
-                metadataHeaders: ['From', 'Subject']
+                format: 'full', // Change to 'full' to get payload including parts
             });
 
-            const headers = response.data.payload.headers;
+            const payload = response.data.payload;
+            const headers = payload.headers;
             const fromHeader = headers.find(h => h.name === 'From').value;
             const subjectHeader = headers.find(h => h.name === 'Subject').value;
+
+            const attachments = [];
+            if (payload.parts) {
+                const findAttachments = (parts) => {
+                    parts.forEach(part => {
+                        if (part.filename && part.body.attachmentId) {
+                            attachments.push({
+                                id: part.body.attachmentId,
+                                filename: part.filename,
+                                size: part.body.size,
+                                mimetype: part.mimeType
+                            });
+                        }
+                        if (part.parts) {
+                            findAttachments(part.parts);
+                        }
+                    });
+                };
+                findAttachments(payload.parts);
+            }
+
 
             return {
                 id: messageId,
@@ -280,11 +328,34 @@ class GmailService {
                 subject: subjectHeader,
                 snippet: response.data.snippet,
                 internalDate: response.data.internalDate,
-                messageUrl: `https://mail.google.com/mail/#all/${messageId}` // Tambahan baru
+                messageUrl: `https://mail.google.com/mail/#all/${messageId}`,
+                attachments: attachments
             };
         } catch (error) {
-            logger.error(`Error getting details for email ${messageId} from "${clientData.name}":`, error);
+            logger.error(`Error getting details for email ${messageId} from \"${clientData.name}\":`, error);
             return null;
+        }
+    }
+
+    async downloadAttachment(accountName, messageId, attachmentId) {
+        const clientData = Array.from(this.clients.values()).find(c => c.name === accountName);
+        if (!clientData) {
+            throw new Error(`Gmail account named '${accountName}' not found or initialized.`);
+        }
+
+        try {
+            const response = await clientData.gmail.users.messages.attachments.get({
+                userId: 'me',
+                messageId: messageId,
+                id: attachmentId
+            });
+            // Convert base64url to standard base64
+            const base64Data = response.data.data.replace(/-/g, '+').replace(/_/g, '/');
+            response.data.data = base64Data;
+            return response.data;
+        } catch (error) {
+            logger.error(`Failed to download attachment ${attachmentId} from message ${messageId}:`, error);
+            throw new Error('Failed to download attachment from Gmail.');
         }
     }
 
