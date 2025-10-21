@@ -15,16 +15,33 @@ const config = {
   sessionDir: process.env.WABOT_SESSION_DIR || './sessions',
 
   apis: {
-    googleDrive: {
-      folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
-      tokenPath: process.env.GOOGLE_DRIVE_TOKEN_PATH || join(__dirname, './data/credentials/token.json'),
-      credentialsPath: process.env.GOOGLE_DRIVE_CREDENTIALS_PATH || join(__dirname, './data/credentials/credentials.json'),
-      maxFileSize: parseInt(process.env.GOOGLE_DRIVE_MAX_FILE_SIZE, 10) || 100,
-      uploadTimeout: parseInt(process.env.GOOGLE_DRIVE_UPLOAD_TIMEOUT, 10) || 300000,
-      mimeTypes: (process.env.GOOGLE_DRIVE_MIME_TYPES || 'image/*,video/*,application/pdf').split(','),
-      maxRetries: parseInt(process.env.GOOGLE_DRIVE_MAX_RETRIES, 10) || 3,
-      retryDelay: parseInt(process.env.GOOGLE_DRIVE_RETRY_DELAY, 10) || 1000
-    },
+    googleDriveAccounts: (() => {
+      const defaultConfig = {
+        maxFileSize: parseInt(process.env.GOOGLE_DRIVE_MAX_FILE_SIZE, 10) || 100,
+        uploadTimeout: parseInt(process.env.GOOGLE_DRIVE_UPLOAD_TIMEOUT, 10) || 300000,
+        mimeTypes: (process.env.GOOGLE_DRIVE_MIME_TYPES || 'image/*,video/*,application/pdf').split(','),
+        maxRetries: parseInt(process.env.GOOGLE_DRIVE_MAX_RETRIES, 10) || 3,
+        retryDelay: parseInt(process.env.GOOGLE_DRIVE_RETRY_DELAY, 10) || 1000
+      };
+
+      try {
+        const jsonPath = join(__dirname, './data/credentials/gdrive_config.json');
+        const jsonData = fs.readFileSync(jsonPath, 'utf8');
+        const driveAccounts = JSON.parse(jsonData);
+
+        if (Array.isArray(driveAccounts)) {
+          return driveAccounts.map(account => {
+            const fullPathAccount = { ...account };
+            fullPathAccount.tokenPath = join(process.cwd(), account.tokenPath);
+            fullPathAccount.credentialsPath = join(process.cwd(), account.credentialsPath);
+            return { ...defaultConfig, ...fullPathAccount };
+          });
+        }
+        return []; // Return empty array if not an array
+      } catch (error) {
+        return []; // Return empty array if file is missing or invalid
+      }
+    })(),
     gmail: {
       enabled: process.env.GMAIL_ENABLED === 'true',
       leaveAsUnread: process.env.GMAIL_LEAVE_AS_UNREAD === 'true',

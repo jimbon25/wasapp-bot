@@ -252,5 +252,6 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Perbaikan Bug (Fixes)
 
+*   **Perbaikan Sensitivitas Huruf Besar/Kecil Akun Google Drive:** Memperbaiki masalah di mana pergantian akun Google Drive gagal karena sensitivitas huruf besar/kecil pada nama akun.
 *   **Pengunduhan Lampiran Gmail**: Memperbaiki error `atob` yang terjadi karena salah encoding `base64`. Lampiran sekarang dapat diunduh dengan benar.
 *   **Perintah Admin pada Batch**: Memperbaiki bug di mana admin tidak dapat menjalankan perintah pada batch media yang dimulai oleh member biasa.

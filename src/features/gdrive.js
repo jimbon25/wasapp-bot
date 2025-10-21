@@ -4,6 +4,8 @@ import uploadSessionService from '../services/gdriveServices/uploadSessionServic
 import driveFolderService from '../services/gdriveServices/driveFolderService.js';
 import { FileManager } from '../utils/fileManagement/fileManager.js';
 import taskManager from '../utils/systemService/taskManager.js';
+import config from '../config.js';
+import activeDriveAccountManager from '../utils/gdrive/activeDriveAccountManager.js';
 
 export default {
     name: 'gdrive',
@@ -80,12 +82,49 @@ export default {
         }
     },
 
+    adminOnly: true,
     async execute(message, args) {
         taskManager.increment();
         try {
             const userId = message.author || message.from;
+            const subCommand = args[0];
 
-            if (args[0] === 'done') {
+            if (subCommand === 'accounts') {
+                const allAccounts = config.apis.googleDriveAccounts;
+                const activeAccount = await activeDriveAccountManager.getActiveAccount();
+
+                if (!allAccounts || allAccounts.length === 0) {
+                    await message.reply('ℹ️ Tidak ada akun Google Drive yang terkonfigurasi.');
+                    return;
+                }
+
+                let response = '*Daftar Akun Google Drive:*';
+                allAccounts.forEach(acc => {
+                    const isActive = activeAccount && acc.accountName === activeAccount.accountName ? '(Aktif)' : '';
+                    response += `\n- ${acc.accountName} ${isActive}`;
+                });
+                response += '\n\nGunakan `/gdrive set-account [nama_akun]` untuk mengganti akun aktif.';
+                await message.reply(response);
+                return;
+            }
+
+            if (subCommand === 'set-account') {
+                const accountName = args.slice(1).join(' ');
+                if (!accountName) {
+                    await message.reply('⚠️ Mohon berikan nama akun yang ingin diaktifkan. Contoh: `/gdrive set-account Drive Utama`');
+                    return;
+                }
+
+                const success = await activeDriveAccountManager.setActiveAccount(accountName);
+                if (success) {
+                    await message.reply(`✔ Akun Google Drive aktif telah diubah menjadi: *${accountName}*`);
+                } else {
+                    await message.reply(`✘ Akun "${accountName}" tidak ditemukan. Gunakan \`/gdrive accounts\` untuk melihat daftar akun yang tersedia.`);
+                }
+                return;
+            }
+
+            if (subCommand === 'done') {
                 const hasSession = await uploadSessionService.hasActiveSession(userId);
                 if (!hasSession) {
                     await message.reply('⚠️ Tidak ada sesi upload yang aktif.');
@@ -98,13 +137,13 @@ export default {
                 return;
             }
 
-            if (args[0] === 'folders') {
+            if (subCommand === 'folders') {
                 const folderList = await driveFolderService.formatFolderList(userId);
                 await message.reply(folderList);
                 return;
             }
 
-            if (args[0] === 'folder') {
+            if (subCommand === 'folder') {
                 if (!args[1]) {
                     await message.reply('⚠️ Mohon berikan nama folder!');
                     return;
@@ -130,7 +169,7 @@ export default {
                 return;
             }
 
-            if (args[0] === 'rename') {
+            if (subCommand === 'rename') {
                 if (args.length < 3) {
                     await message.reply('⚠️ Format: /gdrive rename <nama lama> <nama baru>');
                     return;
@@ -147,7 +186,7 @@ export default {
                 return;
             }
 
-            if (args[0] === 'status') {
+            if (subCommand === 'status') {
                 const session = await uploadSessionService.getSession(userId);
                 if (!session) {
                     await message.reply('ℹ️ Tidak ada sesi upload yang aktif.');
@@ -162,7 +201,7 @@ export default {
                 return;
             }
 
-            if (args[0] === '-folder') {
+            if (subCommand === '-folder') {
                 if (!args[1]) {
                     await message.reply('⚠️ Mohon tentukan nama folder. Contoh: /gdrive -folder Foto Liburan');
                     return;
@@ -187,7 +226,7 @@ export default {
 
             const hasMedia = message.hasMedia || message._data?.quotedMsg?.hasMedia;
             if (!hasMedia) {
-                await message.reply('⚠️ Silakan kirim atau reply file/media yang ingin diupload ke Google Drive.\n\nCommand yang tersedia:\n/gdrive -folder [nama] : Buat folder baru\n/gdrive folder [nama] : Lanjut upload ke folder yang ada\n/gdrive folders : Lihat daftar folder\n/gdrive rename [lama] [baru] : Ganti nama folder\n/gdrive status : Cek status upload');
+                await message.reply('⚠️ Silakan kirim atau reply file/media yang ingin diupload ke Google Drive.\n\nCommand yang tersedia:\n/gdrive -folder [nama] : Buat folder baru\n/gdrive folder [nama] : Lanjut upload ke folder yang ada\n/gdrive folders : Lihat daftar folder\n/gdrive rename [lama] [baru] : Ganti nama folder\n/gdrive status : Cek status upload\n\n*Admin Commands:*\n/gdrive accounts : Lihat daftar akun Google Drive\n/gdrive set-account [nama_akun] : Ganti akun Google Drive aktif');
                 return;
             }
 

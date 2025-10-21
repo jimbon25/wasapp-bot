@@ -41,8 +41,9 @@ Kunci-kunci ini menyimpan data dan konfigurasi untuk berbagai fitur bot.
 | `autoreply:user:<userId>` | `HASH` | Menyimpan aturan auto-reply yang spesifik untuk pengguna perorangan. | `autoreply:user:456@c.us` |
 | `welcome_messages` | `HASH` | Menyimpan pesan selamat datang untuk setiap grup. *Field* adalah ID grup (`groupId`), dan *value* adalah pesan selamat datangnya. | `welcome_messages` |
 | `chat_history:<userId>` | `LIST` | Menyimpan riwayat percakapan dengan AI (Gemini) untuk setiap pengguna, memungkinkan AI mengingat konteks. | `chat_history:628123@c.us` |
-| `gdrive_session:<userId>` | `STRING` | Menyimpan status sesi multi-upload Google Drive yang sedang aktif untuk seorang pengguna. Kunci ini memiliki masa berlaku (TTL). | `gdrive_session:628123@c.us` |
-| `drive:folders:<userId>` | `STRING` | Menyimpan riwayat folder Google Drive yang pernah dibuat atau digunakan oleh pengguna dalam format JSON. | `drive:folders:628123@c.us` |
+| `gdrive_session:<userId>:<accountName>` | `STRING` | Menyimpan status sesi multi-upload Google Drive yang sedang aktif untuk seorang pengguna dan akun GDrive tertentu. Kunci ini memiliki masa berlaku (TTL). | `gdrive_session:628123@c.us:Jimbon` |
+| `drive:folders:<userId>:<accountName>` | `STRING` | Menyimpan riwayat folder Google Drive yang pernah dibuat atau digunakan oleh pengguna untuk akun GDrive tertentu dalam format JSON. | `drive:folders:628123@c.us:Jimbon` |
+| `gdrive:active_account_name` | `STRING` | Menyimpan nama akun Google Drive yang sedang aktif digunakan oleh bot. | `gdrive:active_account_name` |
 | `mega_credentials` | `HASH` | Menyimpan kredensial (email & password terenkripsi) akun Mega.nz untuk setiap admin. | `mega_credentials` |
 | `mega_session:<userId>` | `STRING` | Penanda bahwa seorang admin sedang dalam sesi upload Mega.nz. Kunci ini memiliki masa berlaku (TTL). | `mega_session:628123@c.us` |
 | `location:<userId>` | `STRING` | Menyimpan data lokasi terakhir yang dikirim oleh pengguna untuk digunakan oleh fitur `/maps`. Kunci ini memiliki masa berlaku (TTL). | `location:628123@c.us` |

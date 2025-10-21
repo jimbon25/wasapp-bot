@@ -1,11 +1,20 @@
 import { redisManager } from '../../utils/redis/RedisManager.js';
 import logger from '../../utils/common/logger.js';
+import activeDriveAccountManager from '../../utils/gdrive/activeDriveAccountManager.js';
 
 class UploadSessionService {
     constructor() {
         this.redis = redisManager;
         this.sessionPrefix = 'gdrive_session:';
         this.sessionTimeout = 5 * 60;
+    }
+
+    async getSessionKey(userId) {
+        const activeAccount = await activeDriveAccountManager.getActiveAccount();
+        if (!activeAccount) {
+            throw new Error('No active Google Drive account configured for session.');
+        }
+        return `${this.sessionPrefix}${userId}:${activeAccount.accountName}`;
     }
 
     /**
@@ -23,13 +32,14 @@ class UploadSessionService {
             uploadCount: 0
         };
         
+        const sessionKey = await this.getSessionKey(userId);
         await this.redis.set(
-            `${this.sessionPrefix}${userId}`,
+            sessionKey,
             JSON.stringify(sessionData),
             this.sessionTimeout
         );
         
-        logger.info(`Created upload session for user ${userId} with folder ${folderName}`);
+        logger.info(`Created upload session for user ${userId} with folder ${folderName} for account ${sessionKey.split(':').pop()}`);
     }
 
     /**
@@ -37,13 +47,19 @@ class UploadSessionService {
      * @param {string} userId - The WhatsApp user ID
      */
     async getSession(userId) {
-        const session = await this.redis.get(`${this.sessionPrefix}${userId}`);
-        if (!session) return null;
-        
         try {
-            return JSON.parse(session);
+            const sessionKey = await this.getSessionKey(userId);
+            const session = await this.redis.get(sessionKey);
+            if (!session) return null;
+            
+            try {
+                return JSON.parse(session);
+            } catch (error) {
+                logger.error('Error parsing session data', { userId, error });
+                return null;
+            }
         } catch (error) {
-            logger.error('Error parsing session data', { userId, error });
+            logger.warn(`Could not get session for user ${userId}: ${error.message}`);
             return null;
         }
     }
@@ -57,8 +73,9 @@ class UploadSessionService {
         if (!session) return false;
 
         session.uploadCount++;
+        const sessionKey = await this.getSessionKey(userId);
         await this.redis.set(
-            `${this.sessionPrefix}${userId}`,
+            sessionKey,
             JSON.stringify(session),
             this.sessionTimeout
         );
@@ -71,8 +88,13 @@ class UploadSessionService {
      * @param {string} userId - The WhatsApp user ID
      */
     async endSession(userId) {
-        await this.redis.del(`${this.sessionPrefix}${userId}`);
-        logger.info(`Ended upload session for user ${userId}`);
+        try {
+            const sessionKey = await this.getSessionKey(userId);
+            await this.redis.del(sessionKey);
+            logger.info(`Ended upload session for user ${userId} for account ${sessionKey.split(':').pop()}`);
+        } catch (error) {
+            logger.warn(`Could not end session for user ${userId}: ${error.message}`);
+        }
     }
 
     /**
@@ -80,7 +102,13 @@ class UploadSessionService {
      * @param {string} userId - The WhatsApp user ID
      */
     async hasActiveSession(userId) {
-        return await this.redis.exists(`${this.sessionPrefix}${userId}`);
+        try {
+            const sessionKey = await this.getSessionKey(userId);
+            return await this.redis.exists(sessionKey);
+        } catch (error) {
+            logger.warn(`Could not check active session for user ${userId}: ${error.message}`);
+            return 0;
+        }
     }
 }
 

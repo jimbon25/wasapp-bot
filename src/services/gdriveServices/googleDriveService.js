@@ -1,3 +1,4 @@
+
 import { google } from 'googleapis';
 import fs from 'fs';
 import fsPromises from 'fs/promises';
@@ -5,50 +6,62 @@ import path from 'path';
 import logger from '../../utils/common/logger.js';
 import config from '../../config.js';
 import { FileManager } from '../../utils/fileManagement/fileManager.js';
+import activeDriveAccountManager from '../../utils/gdrive/activeDriveAccountManager.js';
 
 class GoogleDriveService {
     constructor() {
-        this.initialized = false;
-        this.drive = null;
         this.fileManager = new FileManager();
-        this.config = config.apis.googleDrive;
+        this.driveClientsCache = new Map();
     }
 
-    async initialize() {
-        if (this.initialized) return;
+    async _getDriveClient() {
+        const activeAccount = await activeDriveAccountManager.getActiveAccount();
+
+        if (!activeAccount) {
+            throw new Error('No active Google Drive account is configured. Please run the setup script.');
+        }
+
+        // Return cached client if available
+        if (this.driveClientsCache.has(activeAccount.accountName)) {
+            return { client: this.driveClientsCache.get(activeAccount.accountName), config: activeAccount };
+        }
 
         try {
-            const credentials = JSON.parse(await fsPromises.readFile(this.config.credentialsPath, 'utf8'));
-            
+            const credentials = JSON.parse(await fsPromises.readFile(activeAccount.credentialsPath, 'utf8'));
             const oauth2Client = new google.auth.OAuth2(
                 credentials.installed.client_id,
                 credentials.installed.client_secret,
                 credentials.installed.redirect_uris[0]
             );
 
-            const tokens = JSON.parse(await fsPromises.readFile(this.config.tokenPath, 'utf8'));
+            const tokens = JSON.parse(await fsPromises.readFile(activeAccount.tokenPath, 'utf8'));
             oauth2Client.setCredentials(tokens);
 
-            this.drive = google.drive({ version: 'v3', auth: oauth2Client });
-            this.initialized = true;
-            logger.info('Google Drive service initialized successfully');
+            const drive = google.drive({ version: 'v3', auth: oauth2Client });
+            
+            // Cache the new client
+            this.driveClientsCache.set(activeAccount.accountName, drive);
+            logger.info(`Google Drive client initialized for account: ${activeAccount.accountName}`);
+
+            return { client: drive, config: activeAccount };
         } catch (error) {
-            logger.error('Failed to initialize Google Drive service:', error);
-            throw new Error('Google Drive initialization failed');
+            logger.error(`Failed to initialize Google Drive client for account ${activeAccount.accountName}:`, error);
+            throw new Error(`Failed to initialize Google Drive for account: ${activeAccount.accountName}. Please re-authorize it.`);
         }
     }
 
-    async createFolder(folderName, parentFolderId = this.config.folderId) {
+    async createFolder(folderName, parentFolderId = null) {
         try {
-            await this.initialize();
+            const { client: drive, config: activeConfig } = await this._getDriveClient();
+            const finalParentFolderId = parentFolderId || activeConfig.defaultFolderId;
 
             const fileMetadata = {
                 name: folderName,
                 mimeType: 'application/vnd.google-apps.folder',
-                parents: [parentFolderId]
+                parents: [finalParentFolderId]
             };
 
-            const folder = await this.drive.files.create({
+            const folder = await drive.files.create({
                 resource: fileMetadata,
                 fields: 'id, webViewLink'
             });
@@ -61,18 +74,19 @@ class GoogleDriveService {
         }
     }
 
-    async uploadFile(filePath, customFileName = '', parentFolderId = this.config.folderId, mimeType = null) {
+    async uploadFile(filePath, customFileName = '', parentFolderId = null, mimeType = null) {
         try {
-            await this.initialize();
+            const { client: drive, config: activeConfig } = await this._getDriveClient();
+            const finalParentFolderId = parentFolderId || activeConfig.defaultFolderId;
 
             const stats = await fsPromises.stat(filePath);
-            if (stats.size > this.config.maxFileSize * 1024 * 1024) {
-                throw new Error(`File size exceeds maximum limit of ${this.config.maxFileSize}MB`);
+            if (stats.size > activeConfig.maxFileSize * 1024 * 1024) {
+                throw new Error(`File size exceeds maximum limit of ${activeConfig.maxFileSize}MB`);
             }
 
             const fileName = customFileName || path.basename(filePath);
             const detectedMimeType = mimeType || this.fileManager.getMimeType(filePath);
-            const allowedTypes = this.config.mimeTypes;
+            const allowedTypes = activeConfig.mimeTypes;
             if (!allowedTypes.includes('*/*') && 
                 !allowedTypes.includes(detectedMimeType) && 
                 !allowedTypes.some(type => type.endsWith('/*') && detectedMimeType.startsWith(type.slice(0, -1)))) {
@@ -81,7 +95,7 @@ class GoogleDriveService {
 
             const fileMetadata = {
                 name: fileName,
-                parents: [parentFolderId]
+                parents: [finalParentFolderId]
             };
 
             const media = {
@@ -90,13 +104,13 @@ class GoogleDriveService {
             };
 
             let attempt = 1;
-            while (attempt <= this.config.maxRetries) {
+            while (attempt <= activeConfig.maxRetries) {
                 try {
-                    const response = await this.drive.files.create({
+                    const response = await drive.files.create({
                         requestBody: fileMetadata,
                         media: media,
                         fields: 'id, webViewLink',
-                        timeout: this.config.uploadTimeout
+                        timeout: activeConfig.uploadTimeout
                     });
 
                     logger.info(`File uploaded successfully to Google Drive: ${fileName}`);
@@ -105,10 +119,10 @@ class GoogleDriveService {
                         webViewLink: response.data.webViewLink
                     };
                 } catch (error) {
-                    if (attempt === this.config.maxRetries) throw error;
+                    if (attempt === activeConfig.maxRetries) throw error;
                     
-                    logger.warn(`Upload attempt ${attempt} failed, retrying in ${this.config.retryDelay}ms`);
-                    await new Promise(resolve => setTimeout(resolve, this.config.retryDelay));
+                    logger.warn(`Upload attempt ${attempt} failed, retrying in ${activeConfig.retryDelay}ms`);
+                    await new Promise(resolve => setTimeout(resolve, activeConfig.retryDelay));
                     attempt++;
                 }
             }
@@ -116,16 +130,6 @@ class GoogleDriveService {
             logger.error('Failed to upload file to Google Drive:', error);
             throw this.handleDriveError(error);
         }
-    }
-
-    isAllowedMimeType(mimeType) {
-        return this.config.allowedMimeTypes.some(allowed => {
-            if (allowed.endsWith('/*')) {
-                const type = allowed.split('/')[0];
-                return mimeType.startsWith(`${type}/`);
-            }
-            return mimeType === allowed;
-        });
     }
 
     handleDriveError(error) {

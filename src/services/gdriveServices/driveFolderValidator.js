@@ -2,21 +2,10 @@ import logger from '../../utils/common/logger.js';
 import googleDriveService from './googleDriveService.js';
 
 class DriveFolderValidator {
-    constructor() {
-        this.drive = null;
-    }
-
-    async initDrive() {
-        if (!googleDriveService.drive) {
-            await googleDriveService.initialize();
-        }
-        this.drive = googleDriveService.drive;
-    }
-
     async isFolderExists(folderId) {
         try {
-            await this.initDrive();
-            await this.drive.files.get({
+            const { client: drive } = await googleDriveService._getDriveClient();
+            await drive.files.get({
                 fileId: folderId,
                 fields: 'id, name, trashed'
             });
@@ -32,7 +21,6 @@ class DriveFolderValidator {
 
     async validateFolders(userFolders) {
         try {
-            await this.initDrive();
             const validFolders = [];
             
             for (const folder of userFolders) {

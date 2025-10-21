@@ -10,18 +10,22 @@ class DriveFolderRedis {
     }
 
     /**
-     * Get Redis key for user's folders
+     * Get Redis key for user's folders, now including the GDrive account name.
      */
-    getFolderKey(userId) {
-        return `${FOLDER_KEY_PREFIX}${userId}`;
+    getFolderKey(userId, gdriveAccountName) {
+        if (!gdriveAccountName) {
+            logger.warn('gdriveAccountName is required for getFolderKey but was not provided. Falling back to default.');
+            return `${FOLDER_KEY_PREFIX}${userId}:default`;
+        }
+        return `${FOLDER_KEY_PREFIX}${userId}:${gdriveAccountName}`;
     }
 
     /**
-     * Get folders from Redis
+     * Get folders from Redis for a specific user and GDrive account.
      */
-    async getFolders(userId) {
+    async getFolders(userId, gdriveAccountName) {
         try {
-            const data = await redisManager.client.get(this.getFolderKey(userId));
+            const data = await redisManager.client.get(this.getFolderKey(userId, gdriveAccountName));
             if (!data) return { recentFolders: [] };
             return JSON.parse(data);
         } catch (error) {
@@ -31,12 +35,12 @@ class DriveFolderRedis {
     }
 
     /**
-     * Save folders to Redis
+     * Save folders to Redis for a specific user and GDrive account.
      */
-    async saveFolders(userId, folders) {
+    async saveFolders(userId, gdriveAccountName, folders) {
         try {
             await redisManager.client.set(
-                this.getFolderKey(userId),
+                this.getFolderKey(userId, gdriveAccountName),
                 JSON.stringify(folders)
             );
         } catch (error) {
