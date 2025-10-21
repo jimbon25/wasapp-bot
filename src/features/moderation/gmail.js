@@ -75,7 +75,7 @@ export default {
 
                     await message.reply(`⏳ Mengunduh lampiran \"${attachmentToDownload.filename}\"...`);
 
-                    const accountName = context.accountName; // Assuming you store accountName in context
+                    const accountName = context.accountName;
                     const attachmentData = await gmailService.downloadAttachment(accountName, context.gmailMessageId, attachmentToDownload.id);
 
                     const media = new MessageMedia(attachmentToDownload.mimetype, attachmentData.data, attachmentToDownload.filename);

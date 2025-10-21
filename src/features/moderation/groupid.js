@@ -17,7 +17,6 @@ export default {
             
             logger.info(`Admin ${message.author || message.from} requested group ID for "${chat.name}".`);
             
-            // Correctly formatted reply
             await message.reply('ID untuk grup ini adalah:\n```' + groupId + '```');
 
         } catch (error) {

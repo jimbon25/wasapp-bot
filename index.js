@@ -4,37 +4,31 @@ import { AIChatHandler } from './src/handlers/aiChat.js';
 import logger from './src/utils/common/logger.js';
 import sessionManager from './src/utils/sessionsManagement/sessionManager.js';
 import { initializeCommandHandler } from './src/handlers/commandHandler.js';
-import securityManager from './src/utils/systemService/securityManager.js'; // Note the lowercase 's'
+import securityManager from './src/utils/systemService/securityManager.js';
 import cleanupService from './src/utils/systemService/cleanupService.js';
 import dotenv from 'dotenv';
 import { redisManager, fallbackConfig } from './src/utils/redis/index.js';
 import config from './src/config.js';
-import { runDataMigration } from './src/startup/migration.js'; // New import
-import { setupClient } from './src/startup/clientSetup.js'; // New import
+import { runDataMigration } from './src/startup/migration.js';
+import { setupClient } from './src/startup/clientSetup.js';
 import fs from 'fs';
 import path from 'path';
-
 import taskManager from './src/utils/systemService/taskManager.js';
 
-// Load environment variables
 dotenv.config();
 
-// Global flag for graceful shutdown
 global.isShuttingDown = false;
 
-// Initialize Redis and fallback configuration
 try {
     await redisManager.connect();
     await fallbackConfig.init();
     logger.info('Redis system initialized successfully');
     
-    // Run data migration after Redis is initialized
     await runDataMigration();
 } catch (error) {
     logger.warn('Redis initialization failed, continuing without Redis:', error.message);
 }
 
-// Log admin configuration for debugging
 try {
     logger.info('=== Admin Configuration ===');
     logger.info(`Admin numbers from env: ${process.env.ADMIN_NUMBERS}`);
@@ -45,16 +39,13 @@ try {
     logger.error('Error while checking admin configuration:', error);
 }
 
-// Initialize command handler with security manager
 const commandHandler = initializeCommandHandler(securityManager);
 
-// Initialize file manager
 import fileManager, { FILE_TYPES } from './src/utils/fileManagement/fileManager.js';
 await fileManager.initialize({
     baseDir: process.env.BASE_DIR || process.cwd()
 });
 
-// Initialize cleanup service with file manager paths
 cleanupService.initialize({
     paths: {
         temp: fileManager.getPath(FILE_TYPES.TEMP),
@@ -63,10 +54,8 @@ cleanupService.initialize({
     }
 });
 
-// Initialize AI chat handler
 const aiHandler = new AIChatHandler();
 
-// Initialize error handling for uncaught exceptions
 process.on('uncaughtException', (error) => {
     logger.error('Uncaught Exception:', error);
 });
@@ -82,11 +71,12 @@ process.on('unhandledRejection', (error) => {
 function startFileWatcher(client) {
     const configPaths = [
         path.join(process.cwd(), 'src', 'data', 'credentials', 'gmailCredentials', 'gmail_accounts.json'),
-        path.join(process.cwd(), 'src', 'data', 'credentials', 'gmailCredentials')
+        path.join(process.cwd(), 'src', 'data', 'credentials', 'gmailCredentials'),
+        path.join(process.cwd(), 'src', 'data', 'credentials', 'gdrive_config.json')
     ];
 
     const restartBot = async () => {
-        if (global.isShuttingDown) return; // Shutdown already in progress
+        if (global.isShuttingDown) return;
         global.isShuttingDown = true;
 
         logger.warn('Configuration change detected. Initiating graceful shutdown...');
@@ -105,22 +95,18 @@ function startFileWatcher(client) {
                         logger.error('Error destroying client during restart:', e);
                     }
                 }
-                process.exit(0); // Exit gracefully, systemd will handle the restart
+                process.exit(0);
             } else {
                 logger.info(`Waiting for ${activeTasks} tasks to complete before restarting...`);
             }
-        }, 3000); // Check every 3 seconds
+        }, 3000);
     };
 
     let debounceTimer = null;
     const handleFileChange = (eventType, filename) => {
-        // We only care about Gmail-related files in the gmailCredentials directory
-        if (filename && !(filename.startsWith('token-gmail-') || filename === 'credentials-gmail-all.json' || filename === 'wabot-pubsub-key.json')) {
-            return;
-        }
         logger.info(`File change detected in configuration files: ${filename || 'directory'} (${eventType})`);
         if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(restartBot, 5000); // Wait 5 seconds to prevent rapid restarts
+        debounceTimer = setTimeout(restartBot, 5000);
     };
 
     configPaths.forEach(configPath => {
@@ -134,15 +120,11 @@ function startFileWatcher(client) {
 }
 
 
-// Initialize the client with session handling and retry mechanism
 async function initializeClient() {
     try {
-        // Attempt to create client with retries
         const client = await sessionManager.retryCreateClient(3, 5000);
-        // Pass necessary instances to setupClient
         await setupClient(client, securityManager, commandHandler, aiHandler);
         
-        // Initialize with retry
         let initAttempts = 0;
         const maxInitAttempts = 3;
         
@@ -165,7 +147,6 @@ async function initializeClient() {
             }
         }
 
-        // Start watching for config changes to auto-restart
         startFileWatcher(client);
 
     } catch (error) {
@@ -174,7 +155,6 @@ async function initializeClient() {
     }
 }
 
-// Start the bot
 initializeClient().catch(error => {
     logger.error('Failed to start the bot', error);
     process.exit(1);

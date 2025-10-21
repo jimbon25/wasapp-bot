@@ -6,7 +6,6 @@ describe('SecurityManager Admin Authentication', () => {
     const testAdminNumber = '62812345678@c.us';
 
     beforeEach(() => {
-        // Reset config.adminNumbers before each test
         config.adminNumbers = [testAdminNumber];
         securityManager = new SecurityManager();
     });
