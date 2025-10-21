@@ -39,6 +39,10 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
     });
 
     client.on('message', async (message) => {
+        if (global.isShuttingDown) {
+            logger.warn(`Ignoring incoming message from ${message.from} due to pending shutdown.`);
+            return;
+        }
         try {
             const isModCommand = message.body.toLowerCase().startsWith('/removeforbidden') || 
                                message.body.toLowerCase().startsWith('/addforbidden') ||

@@ -1,12 +1,14 @@
 import { aiChatHandler } from '../handlers/aiChat.js';
 import logger from '../utils/common/logger.js';
 import { CHAT_MODES } from '../utils/common/prompts.js';
+import taskManager from '../utils/systemService/taskManager.js';
 
 export default {
     name: 'ask',
     description: 'Bertanya kepada AI untuk jawaban akademis.',
     requiredPermissions: ['ai'],
     async execute(message, args) {
+        taskManager.increment();
         try {
 
             const content = args.join(' ');
@@ -24,6 +26,8 @@ export default {
         } catch (error) {
             logger.error('Error executing ask command:', error);
             await message.reply('✘ Terjadi kesalahan pada perintah /ask.');
+        } finally {
+            taskManager.decrement();
         }
     }
 };

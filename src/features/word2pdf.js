@@ -3,6 +3,7 @@ import pkg from 'whatsapp-web.js';
 import mediaValidator from '../utils/fileManagement/mediaValidator.js';
 import logger from '../utils/common/logger.js';
 import securityManager from '../utils/systemService/securityManager.js';
+import taskManager from '../utils/systemService/taskManager.js';
 const { MessageMedia } = pkg;
 
 const command = {
@@ -10,6 +11,7 @@ const command = {
     description: 'Convert Word document to PDF',
     requiredPermissions: ['media'],
     async execute(message) {
+        taskManager.increment();
         try {
 
             let docMedia;
@@ -85,6 +87,8 @@ const command = {
         } catch (error) {
             console.error('Error in word2pdf command:', error);
             await message.reply('✗ Sorry, there was an error converting your document. Please try again.');
+        } finally {
+            taskManager.decrement();
         }
     }
 };

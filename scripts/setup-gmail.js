@@ -4,6 +4,7 @@ import path from 'path';
 import readline from 'readline';
 import config from '../src/config.js';
 import logger from '../src/utils/common/logger.js';
+import EncryptionUtil from '../src/utils/common/encryptionUtil.js';
 
 // ANSI Colors
 const colors = {
@@ -16,7 +17,7 @@ const colors = {
     magenta: "\x1b[35m",
 };
 
-const GMAIL_ACCOUNTS_JSON_PATH = path.join(process.cwd(), 'src', 'data', 'static', 'gmail_accounts.json');
+const GMAIL_ACCOUNTS_JSON_PATH = path.join(process.cwd(), 'src', 'data', 'credentials', 'gmailCredentials', 'gmail_accounts.json');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -93,8 +94,10 @@ async function addNewAccount() {
     }
 
     const sanitizedName = name.toLowerCase().replace(/\s+/g, '-');
-    const credentialsPath = path.join('src', 'data', 'credentials', 'credentials-gmail-all.json');
-    const tokenPath = path.join('src', 'data', 'credentials', `token-gmail-${sanitizedName}.json`);
+    
+    // Menggunakan konfigurasi dari config.js
+    const credentialsPath = config.apis.gmail.sharedCredentialsPath;
+    const tokenPath = path.join(config.apis.gmail.credentialsDir, `token-gmail-${sanitizedName}.json`);
     const processedLabel = `Wabot-Notif-${name.replace(/\s+/g, '')}`;
 
     const newAccount = {
@@ -224,8 +227,16 @@ async function authorizeAccount(account) {
         
         const { tokens } = await oAuth2Client.getToken(code);
         
-        fs.writeFileSync(account.tokenPath, JSON.stringify(tokens));
-        console.log(colors.green, `\n✔ Token untuk "${account.name}" berhasil disimpan di:`, account.tokenPath, colors.reset);
+        const secretKey = config.mega.credentialsSecret;
+        if (!secretKey) {
+            logger.error('MEGA_CREDENTIALS_SECRET is not defined in .env. Cannot encrypt Gmail token.');
+            throw new Error('MEGA_CREDENTIALS_SECRET is not defined.');
+        }
+        const encryptionUtil = new EncryptionUtil(secretKey);
+        const encryptedTokens = encryptionUtil.encrypt(JSON.stringify(tokens));
+
+        fs.writeFileSync(account.tokenPath, encryptedTokens);
+        console.log(colors.green, `\n✔ Token terenkripsi untuk "${account.name}" berhasil disimpan di:`, account.tokenPath, colors.reset);
         
         oAuth2Client.setCredentials(tokens);
         const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });

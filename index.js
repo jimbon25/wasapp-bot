@@ -14,8 +14,13 @@ import { setupClient } from './src/startup/clientSetup.js'; // New import
 import fs from 'fs';
 import path from 'path';
 
+import taskManager from './src/utils/systemService/taskManager.js';
+
 // Load environment variables
 dotenv.config();
+
+// Global flag for graceful shutdown
+global.isShuttingDown = false;
 
 // Initialize Redis and fallback configuration
 try {
@@ -76,27 +81,41 @@ process.on('unhandledRejection', (error) => {
  */
 function startFileWatcher(client) {
     const configPaths = [
-        path.join(process.cwd(), 'src', 'data', 'static', 'gmail_accounts.json'),
-        path.join(process.cwd(), 'src', 'data', 'credentials')
+        path.join(process.cwd(), 'src', 'data', 'credentials', 'gmailCredentials', 'gmail_accounts.json'),
+        path.join(process.cwd(), 'src', 'data', 'credentials', 'gmailCredentials')
     ];
 
-    let debounceTimer = null;
     const restartBot = async () => {
-        logger.warn('Configuration change detected. Restarting bot to apply changes...');
-        if (client) {
-            try {
-                await client.destroy();
-                logger.info('WhatsApp client destroyed.');
-            } catch (e) {
-                logger.error('Error destroying client during restart:', e);
+        if (global.isShuttingDown) return; // Shutdown already in progress
+        global.isShuttingDown = true;
+
+        logger.warn('Configuration change detected. Initiating graceful shutdown...');
+        logger.info('Bot will stop accepting new requests and restart after current tasks are finished.');
+
+        const shutdownInterval = setInterval(async () => {
+            const activeTasks = taskManager.getActiveCount();
+            if (activeTasks === 0) {
+                clearInterval(shutdownInterval);
+                logger.warn('All tasks finished. Proceeding with client destruction and restart.');
+                if (client) {
+                    try {
+                        await client.destroy();
+                        logger.info('WhatsApp client destroyed.');
+                    } catch (e) {
+                        logger.error('Error destroying client during restart:', e);
+                    }
+                }
+                process.exit(0); // Exit gracefully, systemd will handle the restart
+            } else {
+                logger.info(`Waiting for ${activeTasks} tasks to complete before restarting...`);
             }
-        }
-        process.exit(0); // Exit gracefully, systemd will handle the restart
+        }, 3000); // Check every 3 seconds
     };
 
+    let debounceTimer = null;
     const handleFileChange = (eventType, filename) => {
-        // We only care about token files in the credentials directory
-        if (filename && !filename.startsWith('token-gmail-')) {
+        // We only care about Gmail-related files in the gmailCredentials directory
+        if (filename && !(filename.startsWith('token-gmail-') || filename === 'credentials-gmail-all.json' || filename === 'wabot-pubsub-key.json')) {
             return;
         }
         logger.info(`File change detected in configuration files: ${filename || 'directory'} (${eventType})`);

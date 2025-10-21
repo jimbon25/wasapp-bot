@@ -1,12 +1,14 @@
 import { aiChatHandler } from '../handlers/aiChat.js';
 import logger from '../utils/common/logger.js';
 import { CHAT_MODES } from '../utils/common/prompts.js';
+import taskManager from '../utils/systemService/taskManager.js';
 
 export default {
     name: 'talk',
     description: 'Mengobrol santai dengan AI.',
     requiredPermissions: ['ai'],
     async execute(message, args) {
+        taskManager.increment();
         try {
 
             const content = args.join(' ');
@@ -23,7 +25,9 @@ export default {
             await message.reply(response);
         } catch (error) {
             logger.error('Error executing talk command:', error);
-            await message.reply('✗ Terjadi kesalahan pada perintah /talk.');
+            await message.reply('✘ Terjadi kesalahan pada perintah /talk.');
+        } finally {
+            taskManager.decrement();
         }
     }
 };

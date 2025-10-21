@@ -92,7 +92,7 @@ Buka file `.env` dan isi variabel-variabel penting seperti:
 -   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`: Untuk notifikasi error via Telegram
 -   `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`: Konfigurasi Redis Anda
 -   `INSTAGRAM_ACCOUNT_1_USERNAME`, `INSTAGRAM_ACCOUNT_1_PASSWORD`: Minimal satu akun Instagram untuk downloader
--   `MEGA_EMAIL`, `MEGA_PASSWORD`: Untuk fitur upload ke Mega.nz
+-   `MEGA_CREDENTIALS_SECRET`: Kunci rahasia untuk enkripsi kredensial Mega.nz (wajib diisi)
 
 Lihat [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) untuk daftar lengkap konfigurasi dan penjelasannya.
 
@@ -162,8 +162,11 @@ Berikut adalah daftar perintah utama yang tersedia. Untuk daftar lengkap dan ban
 |                    | `/gdrive rename [lama] [baru]`        | Mengganti nama folder yang tersimpan.                                  |
 |                    | `/gdrive status`                      | Melihat status sesi upload yang sedang berjalan.                       |
 |                    | `/gdrive done`                        | Mengakhiri sesi upload Google Drive.                                   |
-| **Mega.nz**        | `/mega start`                         | Memulai sesi upload ke folder default di Mega.                         |
-|                    | `/mega done`                          | Mengakhiri sesi upload Mega.                                           |
+| **Mega.nz**        | `/mega login [email] [pass]`          | (Admin) Menghubungkan akun Mega.nz pribadi (di chat pribadi).          |
+|                    | `/mega account`                       | (Admin) Melihat akun Mega.nz yang terhubung.                           |
+|                    | `/mega logout`                        | (Admin) Memutus koneksi akun Mega.nz.                                  |
+|                    | `/mega start`                         | (Admin) Memulai sesi upload ke akun Mega pribadi.                      |
+|                    | `/mega done`                          | (Admin) Mengakhiri sesi upload Mega.                                   |
 | **Moderasi Grup**  | `/kick [@user/reply]`                 | Mengeluarkan anggota dari grup.                                        |
 |                    | `/add [nomor]`                        | Menambahkan anggota ke grup.                                           |
 |                    | `/addreply [kunci] [balasan]`         | Menambah atau memperbarui aturan auto-reply.                           |
@@ -235,6 +238,7 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Perubahan & Peningkatan (Changes & Improvements)
 
+*   **Peningkatan Stabilitas: Implementasi Graceful Shutdown**: Bot sekarang menggunakan mekanisme *graceful shutdown* saat melakukan restart otomatis (misalnya setelah perubahan konfigurasi Gmail). Bot akan berhenti menerima perintah baru dan menunggu semua tugas yang sedang berjalan (seperti upload atau download) selesai sebelum me-restart. Hal ini mencegah proses terputus di tengah jalan dan meningkatkan keandalan secara keseluruhan.
 *   **Peningkatan Skrip Setup Gmail**: Skrip `setup-gmail.js` kini lebih mudah digunakan. Pengguna dapat memasukkan nomor telepon target dalam format biasa (misalnya, `0812...`) dan skrip akan secara otomatis memformatnya ke format WhatsApp yang benar (`62812...@c.us`).
 *   **Peningkatan Notifikasi Gmail**:
     *   Notifikasi sekarang menampilkan daftar lampiran yang ada di email.

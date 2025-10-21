@@ -3,11 +3,13 @@ import googleDriveService from '../services/gdriveServices/googleDriveService.js
 import uploadSessionService from '../services/gdriveServices/uploadSessionService.js';
 import driveFolderService from '../services/gdriveServices/driveFolderService.js';
 import { FileManager } from '../utils/fileManagement/fileManager.js';
+import taskManager from '../utils/systemService/taskManager.js';
 
 export default {
     name: 'gdrive',
     
     async handleMediaMessage(message) {
+        taskManager.increment();
         try {
             const userId = message.author || message.from;
             const session = await uploadSessionService.getSession(userId);
@@ -73,10 +75,13 @@ export default {
             await message.react('✘');
             logger.error('Error handling media message:', error);
             return false;
+        } finally {
+            taskManager.decrement();
         }
     },
 
     async execute(message, args) {
+        taskManager.increment();
         try {
             const userId = message.author || message.from;
 
@@ -238,6 +243,8 @@ export default {
         } catch (error) {
             logger.error('Error in gdrive command', { error: error.message });
             throw error;
+        } finally {
+            taskManager.decrement();
         }
     }
 };

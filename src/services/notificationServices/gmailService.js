@@ -4,6 +4,7 @@ import { PubSub } from '@google-cloud/pubsub';
 import config from '../../config.js';
 import logger from '../../utils/common/logger.js';
 import { redisManager } from '../../utils/redis/index.js';
+import EncryptionUtil from '../../utils/common/encryptionUtil.js';
 
 const GMAIL_STATE_KEY = 'gmail:notifications:enabled';
 const GMAIL_HISTORY_ID_KEY_PREFIX = 'gmail:historyId:';
@@ -15,6 +16,13 @@ class GmailService {
         this.initialized = false;
         this.pubSubClient = null;
         this.subscription = null;
+        const secretKey = config.mega.credentialsSecret;
+        if (secretKey) {
+            this.encryptionUtil = new EncryptionUtil(secretKey);
+        } else {
+            logger.warn('MEGA_CREDENTIALS_SECRET is not set. Gmail token encryption/decryption will be disabled.');
+            this.encryptionUtil = null;
+        }
     }
 
     //### DYNAMIC STATUS METHODS ###
@@ -61,33 +69,64 @@ class GmailService {
 
         logger.info(`Initializing Gmail service for ${this.config.accounts.length} account(s)...`);
 
-        for (const account of this.config.accounts) {
-            try {
-                const credentials = JSON.parse(await fs.readFile(account.credentialsPath, 'utf8'));
-                const { client_secret, client_id, redirect_uris } = credentials.installed;
-                const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+        try {
+            // Load shared credentials
+            const sharedCredentials = JSON.parse(await fs.readFile(this.config.sharedCredentialsPath, 'utf8'));
 
-                const token = JSON.parse(await fs.readFile(account.tokenPath, 'utf8'));
-                oAuth2Client.setCredentials(token);
+            for (const account of this.config.accounts) {
+                try {
+                    const { client_secret, client_id, redirect_uris } = sharedCredentials.installed;
+                    const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
 
-                const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
-                const profile = await gmail.users.getProfile({ userId: 'me' });
-                const emailAddress = profile.data.emailAddress;
+                    let tokenContent = await fs.readFile(account.tokenPath, 'utf8');
+                    let tokens;
 
-                const { id: processedLabelId, name: processedLabelName } = await this._ensureLabelExists(gmail, account.processedLabel);
+                    try {
+                        // First, assume the token is encrypted
+                        if (!this.encryptionUtil) throw new Error('Encryption utility is not available.');
+                        const decryptedToken = this.encryptionUtil.decrypt(tokenContent);
+                        tokens = JSON.parse(decryptedToken);
+                    } catch (e) {
+                        // If decryption fails, assume it's a plaintext (old) token
+                        logger.warn(`Could not decrypt token for ${account.name}. Assuming plaintext and attempting to migrate.`);
+                        try {
+                            tokens = JSON.parse(tokenContent);
+                            if (this.encryptionUtil) {
+                                // Encrypt and overwrite the old token file
+                                const encryptedTokens = this.encryptionUtil.encrypt(JSON.stringify(tokens));
+                                await fs.writeFile(account.tokenPath, encryptedTokens, 'utf8');
+                                logger.info(`Successfully migrated and encrypted token for ${account.name}.`);
+                            }
+                        } catch (parseError) {
+                            logger.error(`Failed to parse token for ${account.name} as JSON after decryption failure. Skipping account.`, parseError);
+                            continue; // Skip this account
+                        }
+                    }
 
-                this.clients.set(emailAddress, {
-                    gmail,
-                    processedLabelId,
-                    processedLabelName,
-                    targetNumbers: account.targetNumbers,
-                    name: account.name
-                });
+                    oAuth2Client.setCredentials(tokens);
 
-                logger.info(`Gmail account "${account.name}" (${emailAddress}) initialized successfully.`);
-            } catch (error) {
-                logger.error(`Failed to initialize Gmail account "${account.name}". Please check its configuration and token file.`, error);
+                    const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+                    const profile = await gmail.users.getProfile({ userId: 'me' });
+                    const emailAddress = profile.data.emailAddress;
+
+                    const { id: processedLabelId, name: processedLabelName } = await this._ensureLabelExists(gmail, account.processedLabel);
+
+                    this.clients.set(emailAddress, {
+                        gmail,
+                        processedLabelId,
+                        processedLabelName,
+                        targetNumbers: account.targetNumbers,
+                        name: account.name
+                    });
+
+                    logger.info(`Gmail account "${account.name}" (${emailAddress}) initialized successfully.`);
+                } catch (error) {
+                    logger.error(`Failed to initialize Gmail account "${account.name}". Please check its token file.`, error);
+                }
             }
+        } catch (error) {
+            logger.error(`Failed to load shared Gmail credentials from ${this.config.sharedCredentialsPath}:`, error);
+            return;
         }
 
         if (this.clients.size > 0) {

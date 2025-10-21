@@ -3,6 +3,7 @@ import pkg from 'whatsapp-web.js';
 import pdfService from '../services/pdfServices/pdfService.js';
 import logger from '../utils/common/logger.js';
 import fileManager, { FILE_TYPES } from '../utils/fileManagement/fileManager.js';
+import taskManager from '../utils/systemService/taskManager.js';
 const { MessageMedia } = pkg;
 
 /**
@@ -64,7 +65,7 @@ export default {
     description: 'Konversi gambar ke PDF secara langsung.',
     requiredPermissions: ['media'],
     async execute(msg, args = []) {
-
+        taskManager.increment();
         try {
             const mediaMsg = msg.hasMedia ? msg : (msg.hasQuotedMsg ? await msg.getQuotedMessage() : null);
 
@@ -79,6 +80,8 @@ export default {
         } catch (error) {
             logger.error('Error in /topdf command execution:', error);
             await msg.reply('✘ Terjadi kesalahan saat memproses permintaan Anda.');
+        } finally {
+            taskManager.decrement();
         }
     }
 };

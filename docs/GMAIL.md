@@ -62,7 +62,7 @@ Untuk menggunakan fitur ini, Anda perlu mengkonfigurasi Gmail API dan Google Clo
     *   Klik **Create**.
     *   Setelah client ID dibuat, sebuah pop-up akan muncul. Klik **DOWNLOAD JSON**.
     *   Ubah nama file yang diunduh menjadi `credentials-gmail-all.json`. **Penting:** File ini akan digunakan untuk semua akun Gmail yang Anda tambahkan.
-    *   Pindahkan file `credentials-gmail-all.json` ini ke dalam direktori `src/data/credentials/` pada proyek bot Anda.
+    *   Pindahkan file `credentials-gmail-all.json` ini ke dalam direktori `src/data/credentials/gmailCredentials/` pada proyek bot Anda.
 
 5.  **Buat Pub/Sub Topic & Subscription**:
     *   Di menu navigasi, cari dan buka **"Pub/Sub"**.
@@ -98,13 +98,15 @@ Untuk menggunakan fitur ini, Anda perlu mengkonfigurasi Gmail API dan Google Clo
     *   Buka tab **"KEYS"**.
     *   Klik **"ADD KEY"** lalu pilih **"Create new key"**.
     *   Pilih **"JSON"** sebagai tipe kunci dan klik **"CREATE"**.
-    *   File JSON akan terunduh. Pindahkan file ini ke `src/data/credentials/` dan ganti namanya menjadi `wabot-pubsub-key.json`.
+    *   File JSON akan terunduh. Pindahkan file ini ke `src/data/credentials/gmailCredentials/` dan ganti namanya menjadi `wabot-pubsub-key.json`.
 
 ---
 
 ## 3. Langkah 2: Konfigurasi Environment Bot (.env)
 
 Buka file `.env` Anda dan isi variabel-variabel umum untuk fitur Gmail dan Pub/Sub.
+
+**Penting:** Pastikan Anda juga telah mengatur `MEGA_CREDENTIALS_SECRET` di file `.env` Anda. Kunci rahasia ini sekarang juga digunakan untuk mengenkripsi token otorisasi Gmail demi keamanan tambahan.
 
 **Penting:** Konfigurasi untuk setiap akun Gmail (seperti nama, nomor target, dll.) tidak lagi diatur di dalam file `.env`. Pengaturan tersebut kini dikelola secara dinamis melalui skrip interaktif.
 
@@ -121,7 +123,12 @@ GMAIL_NOTIFIED_ID_EXPIRY_DAYS=30
 GOOGLE_CLOUD_PROJECT_ID=your-gcp-project-id
 GMAIL_PUBSUB_TOPIC_NAME=projects/your-gcp-project-id/topics/gmail-realtime-updates
 GMAIL_PUBSUB_SUBSCRIPTION_NAME=projects/your-gcp-project-id/subscriptions/wabot-gmail-listener
-GOOGLE_APPLICATION_CREDENTIALS=src/data/credentials/wabot-pubsub-key.json
+GOOGLE_APPLICATION_CREDENTIALS=src/data/credentials/gmailCredentials/wabot-pubsub-key.json
+
+# Gmail Credentials Directory Configuration (Optional)
+GMAIL_CREDENTIALS_BASE_DIR=src/data/credentials
+GMAIL_CREDENTIALS_DIR=src/data/credentials/gmailCredentials
+GMAIL_SHARED_CREDENTIALS_PATH=src/data/credentials/gmailCredentials/credentials-gmail-all.json
 ```
 
 **Penjelasan Variabel:**
@@ -234,9 +241,9 @@ By using this feature, you agree to assume all risks and responsibilities associ
 
 ## 7. Troubleshooting
 
--   **Error: `Could not load the default credentials` (saat bot start atau Pub/Sub error)**
+-   **Could not load the default credentials` (saat bot start atau Pub/Sub error)**
     *   **Penyebab:** Library Pub/Sub tidak dapat menemukan kredensial untuk mengautentikasi ke Google Cloud.
-    *   **Solusi:** Pastikan Anda telah membuat **Service Account Key** dengan peran **"Pub/Sub Subscriber"** dan menempatkan file JSON-nya di `src/data/credentials/wabot-pubsub-key.json`. Pastikan juga variabel `GOOGLE_APPLICATION_CREDENTIALS` di `.env` mengarah ke file tersebut.
+    *   **Solusi:** Pastikan Anda telah membuat **Service Account Key** dengan peran **"Pub/Sub Subscriber"** dan menempatkan file JSON-nya di `src/data/credentials/gmailCredentials/wabot-pubsub-key.json`. Pastikan juga variabel `GOOGLE_APPLICATION_CREDENTIALS` di `.env` mengarah ke file tersebut.
 
 -   **Error: `User not authorized to perform this action.` (saat bot mencoba mendengarkan Pub/Sub)**
     *   **Penyebab:** Service Account Anda (`wabot-pubsub-listener`) tidak memiliki izin yang cukup untuk *mendengarkan* (subscribe) pesan dari Pub/Sub.
@@ -258,7 +265,7 @@ By using this feature, you agree to assume all risks and responsibilities associ
     *   Pastikan `GMAIL_ENABLED=true` di file `.env`.
     *   Jalankan `node scripts/setup-gmail.js` dan pastikan akun yang dimaksud memiliki status `✔ Linked`. Jika tidak, lakukan otorisasi ulang.
     *   Periksa file `src/data/static/gmail_accounts.json` dan pastikan `targetNumbers` untuk akun tersebut sudah benar.
-    *   Pastikan file kredensial utama (`credentials-gmail-all.json`) dan file token spesifik akun (`token-gmail-namaakun.json`) ada di direktori `src/data/credentials/`.
+    *   Pastikan file kredensial utama (`credentials-gmail-all.json`) dan file token spesifik akun (`token-gmail-namaakun.json`) ada di direktori `src/data/credentials/gmailCredentials/`.
 
 -   **Kenapa email saya tetap belum dibaca padahal notifikasi sudah masuk?**
     *   **Penyebab:** Ini adalah perilaku baru yang bisa dikonfigurasi. Kemungkinan Anda mengaktifkan `GMAIL_LEAVE_AS_UNREAD=true` di file `.env` Anda.

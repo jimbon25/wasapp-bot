@@ -4,6 +4,7 @@ const { MessageMedia } = pkg;
 import logger from '../utils/common/logger.js';
 import pdfService from '../services/pdfServices/pdfService.js';
 import fileManager, { FILE_TYPES } from '../utils/fileManagement/fileManager.js';
+import taskManager from '../utils/systemService/taskManager.js';
 
 export default {
     name: 'text2pdf',
@@ -11,6 +12,7 @@ export default {
     usage: '/text2pdf <teks>',
     
     async execute(message, args) {
+        taskManager.increment();
         const timestamp = new Date().getTime();
         const tempTextFile = fileManager.getPath(FILE_TYPES.TEMP, `text_${timestamp}.txt`);
         const outputPdfFile = fileManager.getPath(FILE_TYPES.TEMP, `text_${timestamp}.pdf`);
@@ -55,6 +57,8 @@ export default {
             } catch (cleanupError) {
                 logger.warn('Error cleaning up temporary files after error:', cleanupError);
             }
+        } finally {
+            taskManager.decrement();
         }
     }
 };

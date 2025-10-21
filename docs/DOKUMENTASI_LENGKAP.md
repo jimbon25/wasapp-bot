@@ -138,8 +138,7 @@ Konfigurasi bot diatur melalui file `.env`.
 | `REMOVEBG_API_KEY` | Ya | API key untuk remove.bg |
 | `TELEGRAM_BOT_TOKEN` | Tidak | Token bot Telegram untuk notifikasi |
 | `TELEGRAM_CHAT_ID` | Tidak | ID chat Telegram untuk notifikasi |
-| `MEGA_EMAIL` | Ya* | Email akun Mega.nz |
-| `MEGA_PASSWORD` | Ya* | Password akun Mega.nz |
+| `MEGA_CREDENTIALS_SECRET` | Ya | Kunci rahasia untuk enkripsi kredensial Mega.nz. Wajib diisi. |
 
 #### Redis Configuration
 | Variabel | Wajib | Deskripsi | Default |
@@ -185,7 +184,7 @@ Untuk menjalankan bot sebagai service di Linux:
     -   Buka PowerShell sebagai Admin dan jalankan `wsl --install`.
     -   Restart komputer Anda.
     -   Di dalam WSL (Ubuntu), jalankan `sudo apt update && sudo apt install redis-server`.
-    -   Konfigurasi password di `sudo nano /etc/redis/redis.conf`.
+    -   Konfigurasi password di `sudo nano /etc/redis/redis.conf`.  
     -   Jalankan Redis dengan `sudo service redis-server start`.
 3.  **Setup Proyek**: Lakukan `git clone` dan `npm install` seperti pada langkah instalasi umum.
 4.  **Menjalankan Bot**:
@@ -218,7 +217,7 @@ Berikut adalah daftar perintah utama yang tersedia.
 
 ### Cloud Storage
 | Command | Deskripsi |
-|---|---|
+|---|---|---|
 | `/gdrive [caption]` | Mengunggah file (reply atau kirim dengan caption) ke folder Drive utama. |
 | `/gdrive -folder [nama]` | Membuat folder baru dan memulai sesi upload ke folder tersebut. |
 | `/gdrive folder [nama]` | Melanjutkan sesi upload ke folder yang sudah ada. |
@@ -226,8 +225,11 @@ Berikut adalah daftar perintah utama yang tersedia.
 | `/gdrive rename [lama] [baru]` | Mengganti nama folder yang tersimpan di riwayat. |
 | `/gdrive done` | Mengakhiri sesi upload. |
 | `/gdrive status` | Melihat status sesi upload yang sedang berjalan. |
-| `/mega start` | Memulai sesi upload ke folder default di Mega.nz. |
-| `/mega done` | Mengakhiri sesi upload di Mega.nz. |
+| `/mega login [email] [pass]` | (Admin) Menghubungkan akun Mega.nz pribadi (di chat pribadi). |
+| `/mega account` | (Admin) Melihat akun Mega.nz yang terhubung. |
+| `/mega logout` | (Admin) Memutus koneksi akun Mega.nz. |
+| `/mega start` | (Admin) Memulai sesi upload ke akun Mega pribadi. |
+| `/mega done` | (Admin) Mengakhiri sesi upload di Mega.nz. |
 
 ### Informasi & Utilitas
 | Command | Deskripsi |

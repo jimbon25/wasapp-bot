@@ -16,9 +16,6 @@ const config = {
 
   apis: {
     googleDrive: {
-      clientId: process.env.GOOGLE_DRIVE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_DRIVE_CLIENT_SECRET,
-      redirectUri: process.env.GOOGLE_DRIVE_REDIRECT_URI,
       folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
       tokenPath: process.env.GOOGLE_DRIVE_TOKEN_PATH || join(__dirname, './data/credentials/token.json'),
       credentialsPath: process.env.GOOGLE_DRIVE_CREDENTIALS_PATH || join(__dirname, './data/credentials/credentials.json'),
@@ -36,9 +33,13 @@ const config = {
       topicName: process.env.GMAIL_PUBSUB_TOPIC_NAME,
       subscriptionName: process.env.GMAIL_PUBSUB_SUBSCRIPTION_NAME,
       notifiedIdExpiryDays: parseInt(process.env.GMAIL_NOTIFIED_ID_EXPIRY_DAYS, 10) || 30,
+      credentialsBaseDir: process.env.GMAIL_CREDENTIALS_BASE_DIR || join(__dirname, './data/credentials'),
+      credentialsDir: process.env.GMAIL_CREDENTIALS_DIR || join(__dirname, './data/credentials/gmailCredentials'),
+      sharedCredentialsPath: process.env.GMAIL_SHARED_CREDENTIALS_PATH || join(__dirname, './data/credentials/gmailCredentials/credentials-gmail-all.json'),
+      pubsubKeyPath: process.env.GOOGLE_APPLICATION_CREDENTIALS || join(__dirname, './data/credentials/gmailCredentials/wabot-pubsub-key.json'),
       accounts: (() => {
         try {
-          const jsonPath = join(__dirname, './data/static/gmail_accounts.json');
+          const jsonPath = join(__dirname, './data/credentials/gmailCredentials/gmail_accounts.json');
           const jsonData = fs.readFileSync(jsonPath, 'utf8');
           const jsonAccounts = JSON.parse(jsonData);
           if (Array.isArray(jsonAccounts) && jsonAccounts.length > 0) {

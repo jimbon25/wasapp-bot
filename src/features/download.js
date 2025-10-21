@@ -3,6 +3,7 @@ import path from 'path';
 import pkg from 'whatsapp-web.js';
 import logger from '../utils/common/logger.js';
 import downloaderService from '../services/mediaServices/downloaderService.js';
+import taskManager from '../utils/systemService/taskManager.js';
 
 const { MessageMedia } = pkg;
 
@@ -11,10 +12,11 @@ export default {
     description: 'Downloads content from a given URL.',
     requiredPermissions: ['media'],
     async execute(message, args) {
-
+        taskManager.increment();
         const url = args[0];
         if (!url) {
             await message.reply('Format salah. Gunakan: /download <URL>');
+            taskManager.decrement();
             return;
         }
 
@@ -62,13 +64,14 @@ export default {
 
         } catch (error) {
             logger.error('Error in /download command:', error);
-            const errorMessage = `✘ Gagal mengunduh konten.
-Alasan: ${error.message}`.substring(0, 200);
+            const errorMessage = `✘ Gagal mengunduh konten.\nAlasan: ${error.message}`.substring(0, 200);
             if (statusMsg) {
                 await statusMsg.edit(errorMessage);
             } else {
                 await message.reply(errorMessage);
             }
+        } finally {
+            taskManager.decrement();
         }
     }
 };

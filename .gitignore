@@ -1,8 +1,15 @@
 
 # Data folder structure
 src/data/credentials/*.json
+src/data/credentials/gmailCredentials/
 !src/data/credentials/example/
 !src/data/credentials/example/*.example.json
+
+# Gmail credentials
+src/data/credentials/gmailCredentials/*.json
+src/data/credentials/gmailCredentials/credentials-gmail-all.json
+src/data/credentials/gmailCredentials/wabot-pubsub-key.json
+src/data/credentials/gmailCredentials/token-gmail-*.json
 
 # Static files configuration
 /src/data/static/*.json          # Mengabaikan file JSON di static
