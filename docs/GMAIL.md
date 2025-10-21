@@ -190,16 +190,27 @@ Manajemen dan otorisasi akun Gmail kini dilakukan melalui skrip interaktif yang 
 
 ## 5. Kontrol Dinamis (Perintah Admin)
 
-Anda dapat mengelola fitur notifikasi Gmail secara dinamis melalui perintah WhatsApp tanpa perlu me-restart bot. Perintah ini hanya bisa digunakan oleh admin.
+Anda dapat mengelola seluruh fitur Gmail secara dinamis melalui perintah WhatsApp tanpa perlu me-restart bot. Perintah ini hanya bisa digunakan oleh admin.
 
 -   `/gmail on`
-    Mengaktifkan kembali layanan notifikasi Gmail.
+    Mengaktifkan kembali layanan notifikasi email masuk.
 
 -   `/gmail off`
-    Menonaktifkan layanan notifikasi Gmail. Bot akan berhenti memeriksa email baru.
+    Menonaktifkan layanan notifikasi email masuk.
 
 -   `/gmail status`
-    Mengecek status layanan saat ini (apakah sedang aktif atau tidak).
+    Mengecek status layanan notifikasi (apakah sedang aktif atau tidak).
+
+-   `/gmail accounts`
+    Menampilkan daftar semua akun Gmail yang terkonfigurasi dan menandai akun mana yang sedang aktif untuk mengirim email.
+
+-   `/gmail set-account [nama_akun]`
+    Mengganti akun Gmail yang akan digunakan untuk mengirim email.
+    *Contoh:* `/gmail set-account Pribadi`
+
+-   `/gmail send <penerima> "<subjek>" <isi pesan>`
+    Mengirim email dari akun yang sedang aktif.
+    *Contoh:* `/gmail send teman@email.com "Jadwal Rapat" Jangan lupa rapat jam 2 siang ya.`
 
 -   `/gmail download [nomor]` (hanya dengan me-reply notifikasi)
     Mengunduh lampiran dari email yang notifikasinya Anda balas. Jika email memiliki lebih dari satu lampiran, sertakan nomor lampiran yang ingin diunduh.

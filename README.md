@@ -232,6 +232,9 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Fitur Baru (Features)
 
+*   **Fitur Pengiriman Email via Gmail**: Pengguna kini dapat mengirim email langsung dari WhatsApp.
+    *   Menambahkan perintah `/gmail send <penerima> "<subjek>" <pesan>` untuk membuat dan mengirim email.
+    *   Menambahkan sistem "akun aktif" dengan perintah `/gmail accounts` dan `/gmail set-account [nama_akun]` untuk memilih akun pengirim.
 *   **Restart Otomatis untuk Konfigurasi Baru**: Bot kini dapat mendeteksi perubahan pada konfigurasi akun Gmail (penambahan, penghapusan, atau otorisasi baru) dan akan secara otomatis me-restart dirinya sendiri untuk menerapkan perubahan tersebut. Pengguna tidak perlu lagi me-restart service secara manual.
 *   **Unduh Lampiran Gmail**: Pengguna sekarang dapat mengunduh lampiran email langsung dari WhatsApp dengan membalas pesan notifikasi Gmail menggunakan perintah `/gmail download [nomor]`.
 *   **Pembatalan Auto-Upload**: Menambahkan perintah baru `/upload cancel`. Admin sekarang dapat membatalkan sesi pengumpulan media untuk fitur `AUTO_UPLOAD` sebelum bot mengirimkan prompt konfirmasi.

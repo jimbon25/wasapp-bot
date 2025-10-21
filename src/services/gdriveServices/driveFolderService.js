@@ -23,14 +23,13 @@ class DriveFolderService {
             const allData = { folders: {} };
             const redisManager = (await import('../../utils/redis/index.js')).redisManager;
             
-            // Iterate through all configured GDrive accounts
             const allGdriveAccounts = config.apis.googleDriveAccounts;
             for (const gdriveAccount of allGdriveAccounts) {
                 const accountName = gdriveAccount.accountName;
                 const keys = await redisManager.client.keys(`drive:folders:*:${accountName}`);
                 
                 for (const key of keys) {
-                    const userId = key.split(':')[2]; // Extract userId from key
+                    const userId = key.split(':')[2];
                     const userData = await driveFolderRedis.getFolders(userId, accountName);
                     if (userData.recentFolders.length > 0) {
                         if (!allData.folders[userId]) allData.folders[userId] = {};
@@ -48,7 +47,6 @@ class DriveFolderService {
 
     async saveFolders(userId, gdriveAccountName, folders) {
         await driveFolderRedis.saveFolders(userId, gdriveAccountName, folders);
-        // Schedule JSON backup
         driveFolderRedis.scheduleBackup(() => this.backupToJson());
     }
 
@@ -59,11 +57,9 @@ class DriveFolderService {
 
         const data = await driveFolderRedis.getFolders(userId, gdriveAccountName);
         
-        // Remove if folder already exists
         data.recentFolders = data.recentFolders
             .filter(f => f.folderId !== folderData.folderId);
 
-        // Add new folder at the beginning
         data.recentFolders.unshift({
             folderId: folderData.folderId,
             folderName: folderData.folderName,
@@ -71,7 +67,6 @@ class DriveFolderService {
             lastAccessed: new Date().toISOString()
         });
 
-        // Keep only MAX_FOLDER_HISTORY folders
         data.recentFolders = data.recentFolders
             .slice(0, this.MAX_FOLDER_HISTORY);
 
@@ -86,17 +81,14 @@ class DriveFolderService {
         const data = await driveFolderRedis.getFolders(userId, gdriveAccountName);
         const now = new Date();
         
-        // First filter by last access time
         let folders = data.recentFolders.filter(folder => {
             const lastAccessed = new Date(folder.lastAccessed);
             const daysDiff = (now - lastAccessed) / (1000 * 60 * 60 * 24);
             return daysDiff <= this.FOLDER_EXPIRY_DAYS;
         });
         
-        // Then validate folders still exist in Google Drive
         folders = await driveFolderValidator.validateFolders(folders);
 
-        // Update if folders were filtered
         if (folders.length !== data.recentFolders.length) {
             await this.saveFolders(userId, gdriveAccountName, { recentFolders: folders });
         }
@@ -115,10 +107,8 @@ class DriveFolderService {
         );
         
         if (folder) {
-            // Validate folder still exists in Drive
             const exists = await driveFolderValidator.isFolderExists(folder.folderId);
             if (!exists) {
-                // Remove invalid folder from storage
                 data.recentFolders = data.recentFolders.filter(f => f.folderId !== folder.folderId);
                 await this.saveFolders(userId, gdriveAccountName, data);
                 return null;

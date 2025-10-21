@@ -4,7 +4,6 @@ import fs from 'fs';
 import fsPromises from 'fs/promises';
 import path from 'path';
 import logger from '../../utils/common/logger.js';
-import config from '../../config.js';
 import { FileManager } from '../../utils/fileManagement/fileManager.js';
 import activeDriveAccountManager from '../../utils/gdrive/activeDriveAccountManager.js';
 
@@ -21,7 +20,6 @@ class GoogleDriveService {
             throw new Error('No active Google Drive account is configured. Please run the setup script.');
         }
 
-        // Return cached client if available
         if (this.driveClientsCache.has(activeAccount.accountName)) {
             return { client: this.driveClientsCache.get(activeAccount.accountName), config: activeAccount };
         }
@@ -39,7 +37,6 @@ class GoogleDriveService {
 
             const drive = google.drive({ version: 'v3', auth: oauth2Client });
             
-            // Cache the new client
             this.driveClientsCache.set(activeAccount.accountName, drive);
             logger.info(`Google Drive client initialized for account: ${activeAccount.accountName}`);
 

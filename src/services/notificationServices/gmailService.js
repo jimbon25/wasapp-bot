@@ -12,7 +12,7 @@ const GMAIL_HISTORY_ID_KEY_PREFIX = 'gmail:historyId:';
 class GmailService {
     constructor() {
         this.config = config.apis.gmail;
-        this.clients = new Map(); // Store multiple clients, keyed by email address
+        this.clients = new Map();
         this.initialized = false;
         this.pubSubClient = null;
         this.subscription = null;
@@ -70,7 +70,6 @@ class GmailService {
         logger.info(`Initializing Gmail service for ${this.config.accounts.length} account(s)...`);
 
         try {
-            // Load shared credentials
             const sharedCredentials = JSON.parse(await fs.readFile(this.config.sharedCredentialsPath, 'utf8'));
 
             for (const account of this.config.accounts) {
@@ -82,24 +81,21 @@ class GmailService {
                     let tokens;
 
                     try {
-                        // First, assume the token is encrypted
                         if (!this.encryptionUtil) throw new Error('Encryption utility is not available.');
                         const decryptedToken = this.encryptionUtil.decrypt(tokenContent);
                         tokens = JSON.parse(decryptedToken);
                     } catch (e) {
-                        // If decryption fails, assume it's a plaintext (old) token
                         logger.warn(`Could not decrypt token for ${account.name}. Assuming plaintext and attempting to migrate.`);
                         try {
                             tokens = JSON.parse(tokenContent);
                             if (this.encryptionUtil) {
-                                // Encrypt and overwrite the old token file
                                 const encryptedTokens = this.encryptionUtil.encrypt(JSON.stringify(tokens));
                                 await fs.writeFile(account.tokenPath, encryptedTokens, 'utf8');
                                 logger.info(`Successfully migrated and encrypted token for ${account.name}.`);
                             }
                         } catch (parseError) {
                             logger.error(`Failed to parse token for ${account.name} as JSON after decryption failure. Skipping account.`, parseError);
-                            continue; // Skip this account
+                            continue;
                         }
                     }
 
@@ -113,6 +109,7 @@ class GmailService {
 
                     this.clients.set(emailAddress, {
                         gmail,
+                        emailAddress,
                         processedLabelId,
                         processedLabelName,
                         targetNumbers: account.targetNumbers,
@@ -132,8 +129,48 @@ class GmailService {
         if (this.clients.size > 0) {
             this.initialized = true;
             await this._initializeState();
-            this.startListening(whatsappClient); // Start listening to Pub/Sub
+            this.startListening(whatsappClient);
             logger.info('Gmail service initialization complete.');
+        }
+    }
+
+    async sendEmail(fromAccountName, to, subject, body) {
+        const clientData = Array.from(this.clients.values()).find(c => c.name.toLowerCase() === fromAccountName.toLowerCase());
+        if (!clientData) {
+            throw new Error(`Akun Gmail dengan nama '${fromAccountName}' tidak ditemukan atau belum diinisialisasi.`);
+        }
+
+        try {
+            const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+            const messageParts = [
+                `From: "${clientData.name}" <${clientData.emailAddress}>`,
+                `To: ${to}`,
+                'Content-Type: text/html; charset=utf-8',
+                'MIME-Version: 1.0',
+                `Subject: ${utf8Subject}`,
+                '',
+                body
+            ];
+            const message = messageParts.join('\n');
+
+            const encodedMessage = Buffer.from(message)
+                .toString('base64')
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+
+            const res = await clientData.gmail.users.messages.send({
+                userId: 'me',
+                requestBody: {
+                    raw: encodedMessage,
+                },
+            });
+
+            logger.info(`Email sent successfully from ${fromAccountName} to ${to}. Message ID: ${res.data.id}`);
+            return res.data;
+        } catch (error) {
+            logger.error(`Failed to send email from ${fromAccountName}:`, error);
+            throw new Error('Gagal mengirim email via Gmail API.');
         }
     }
 
@@ -173,8 +210,7 @@ class GmailService {
 
         const messageHandler = async message => {
             logger.info(`Received Gmail push notification: ${message.id}`);
-            message.ack(); // Acknowledge immediately
-
+            message.ack();
             try {
                 const pollingEnabled = await this.isPollingEnabled();
                 if (!pollingEnabled) {
@@ -230,7 +266,6 @@ class GmailService {
                 for (const record of history) {
                     if (record.messagesAdded) {
                         for (const msg of record.messagesAdded) {
-                            // Check if the message is unread before processing
                             const isUnread = msg.message && Array.isArray(msg.message.labelIds) && msg.message.labelIds.includes('UNREAD');
                             if (isUnread) {
                                 await this.sendNotificationForMessage(clientData, msg.message.id, whatsappClient);
@@ -280,7 +315,7 @@ class GmailService {
             if (details.attachments.length > 0) {
                 notifMessage += `*Lampiran:*\n`;
                 details.attachments.forEach((att, index) => {
-                    const fileSize = (att.size / 1024).toFixed(2); // KB
+                    const fileSize = (att.size / 1024).toFixed(2);
                     notifMessage += `${index + 1}. ${att.filename} (${fileSize} KB)\n`;
                 });
                 notifMessage += `\nBalas pesan ini dengan \`/gmail download [nomor]\` untuk mengunduh lampiran.\n`;
@@ -294,10 +329,9 @@ class GmailService {
                         const sentMsg = await whatsappClient.sendMessage(targetNumber, notifMessage);
                         logger.info(`Sent Gmail notification from \"${clientData.name}\" to ${targetNumber}`);
 
-                        // Store context for reply-based download
                         if (details.attachments.length > 0) {
                             const context = {
-                                accountName: clientData.name, // Add account name to context
+                                accountName: clientData.name,
                                 gmailMessageId: messageId,
                                 attachments: details.attachments.map((att, index) => ({
                                     index: index + 1,
@@ -307,7 +341,7 @@ class GmailService {
                                 }))
                             };
                             const contextKey = `gmail_notif:${sentMsg.id._serialized}`;
-                            await redisClient.set(contextKey, JSON.stringify(context), 'EX', 86400); // 24 hour expiry
+                            await redisClient.set(contextKey, JSON.stringify(context), 'EX', 86400);
                         }
 
                     } catch (error) {
@@ -316,7 +350,6 @@ class GmailService {
                 }
             }
 
-            // Add to Redis set after successful notification attempt
             await redisClient.sadd(notifiedIdsKey, messageId);
             await redisClient.expire(notifiedIdsKey, this.config.notifiedIdExpiryDays * 24 * 60 * 60);
 
@@ -332,7 +365,7 @@ class GmailService {
             const response = await clientData.gmail.users.messages.get({
                 userId: 'me',
                 id: messageId,
-                format: 'full', // Change to 'full' to get payload including parts
+                format: 'full',
             });
 
             const payload = response.data.payload;
@@ -388,7 +421,6 @@ class GmailService {
                 messageId: messageId,
                 id: attachmentId
             });
-            // Convert base64url to standard base64
             const base64Data = response.data.data.replace(/-/g, '+').replace(/_/g, '/');
             response.data.data = base64Data;
             return response.data;
@@ -405,7 +437,6 @@ class GmailService {
                 removeLabelIds: []
             };
 
-            // Only mark as read if the config flag is not set to true
             if (!this.config.leaveAsUnread) {
                 resource.removeLabelIds.push('UNREAD');
             }
