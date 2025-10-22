@@ -3,6 +3,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
 import logger from '../src/utils/common/logger.js';
+import config from '../src/config.js';
+import EncryptionUtil from '../src/utils/common/encryptionUtil.js';
 
 // ANSI Colors
 const colors = {
@@ -203,8 +205,17 @@ async function authorizeAccount(account) {
     try {
         const { tokens } = await oAuth2Client.getToken(code);
         const tokenPath = path.join(process.cwd(), account.tokenPath);
-        await fs.writeFile(tokenPath, JSON.stringify(tokens));
-        console.log(`${colors.green}✔ Token berhasil disimpan di: ${account.tokenPath}${colors.reset}`);
+
+        const secretKey = config.mega.credentialsSecret;
+        if (!secretKey) {
+            logger.error('MEGA_CREDENTIALS_SECRET is not defined in .env. Cannot encrypt Google Drive token.');
+            throw new Error('MEGA_CREDENTIALS_SECRET is not defined.');
+        }
+        const encryptionUtil = new EncryptionUtil(secretKey);
+        const encryptedTokens = encryptionUtil.encrypt(JSON.stringify(tokens));
+
+        await fs.writeFile(tokenPath, encryptedTokens);
+        console.log(`${colors.green}✔ Token terenkripsi berhasil disimpan di: ${account.tokenPath}${colors.reset}`);
         
         console.log('\nMenguji koneksi ke Google Drive...');
         oAuth2Client.setCredentials(tokens);

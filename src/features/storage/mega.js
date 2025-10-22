@@ -15,7 +15,7 @@ async function handleMediaMessage(message) {
         const userCredentials = await megaAuthService.getCredentials(userId);
         if (!userCredentials) {
             await message.reply('✗ Akun Mega.nz Anda tidak terhubung. Silakan login dengan `/mega login <email> <password>` di chat pribadi dengan bot.');
-            await megaSessionService.endSession(userId); // End session if credentials are gone
+            await megaSessionService.endSession(userId);
             return true;
         }
 

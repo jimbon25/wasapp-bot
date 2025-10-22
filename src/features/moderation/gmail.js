@@ -88,12 +88,32 @@ export default {
                         body = content.substring(endOfSubjectIndex).trim();
                     }
 
-                    if (!to || !subject || !body) {
-                        return message.reply('Format salah. Gunakan:\n/gmail send <penerima> "<subjek>" <isi pesan>');
+                    if (!to || !subject) { // Body can be optional
+                        return message.reply('Format salah. Gunakan:\n/gmail send <penerima> "<subjek>" [isi pesan]');
                     }
 
-                    await message.reply(`Mengirim email dari *${activeSendAccount.name}* ke *${to}*...`);
-                    await gmailService.sendEmail(activeSendAccount.name, to, subject, body);
+                    let attachment = null;
+                    if (message.hasQuotedMsg) {
+                        const quotedMsg = await message.getQuotedMessage();
+                        if (quotedMsg.hasMedia) {
+                            const media = await quotedMsg.downloadMedia();
+
+                            const MAX_SIZE_MB = 10;
+                            const fileSize = Buffer.from(media.data, 'base64').length;
+                            if (fileSize > MAX_SIZE_MB * 1024 * 1024) {
+                                return message.reply(`✘ Gagal: Ukuran lampiran melebihi batas maksimum (${MAX_SIZE_MB} MB).`);
+                            }
+
+                            attachment = {
+                                data: media.data,
+                                mimetype: media.mimetype,
+                                filename: media.filename || `attachment-${Date.now()}`
+                            };
+                        }
+                    }
+
+                    await message.reply(`Mengirim email dari *${activeSendAccount.name}* ke *${to}*... ${attachment ? 'dengan 1 lampiran.' : ''}`);
+                    await gmailService.sendEmail(activeSendAccount.name, to, subject, body, attachment);
                     await message.reply('✔ Email berhasil terkirim!');
                     break;
                 }

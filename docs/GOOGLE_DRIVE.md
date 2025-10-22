@@ -103,3 +103,10 @@ Setelah file `credentials.json` ditempatkan, proses otorisasi dan konfigurasi me
     -   Sesi upload aktif disimpan di Redis dengan kunci `gdrive_session:<userId>:<accountName>`.
     -   Riwayat folder yang pernah digunakan disimpan di Redis dengan kunci `drive:folders:<userId>:<accountName>`.
     -   Lihat `docs/REDIS_KEYS.md` untuk detail lebih lanjut.
+
+---
+
+## 6. Keamanan
+
+-   **Enkripsi Token**: Untuk meningkatkan keamanan, semua token otorisasi Google Drive disimpan dalam format terenkripsi. Proses ini menggunakan kunci `MEGA_CREDENTIALS_SECRET` dari file `.env` Anda.
+-   **Migrasi Otomatis**: Jika Anda memiliki token dari versi sebelumnya (yang tidak terenkripsi), bot akan secara otomatis mengenkripsinya saat pertama kali fitur Google Drive digunakan setelah pembaruan.

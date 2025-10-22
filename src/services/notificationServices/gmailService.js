@@ -5,6 +5,7 @@ import config from '../../config.js';
 import logger from '../../utils/common/logger.js';
 import { redisManager } from '../../utils/redis/index.js';
 import EncryptionUtil from '../../utils/common/encryptionUtil.js';
+import crypto from 'crypto';
 
 const GMAIL_STATE_KEY = 'gmail:notifications:enabled';
 const GMAIL_HISTORY_ID_KEY_PREFIX = 'gmail:historyId:';
@@ -134,7 +135,7 @@ class GmailService {
         }
     }
 
-    async sendEmail(fromAccountName, to, subject, body) {
+    async sendEmail(fromAccountName, to, subject, body, attachment = null) {
         const clientData = Array.from(this.clients.values()).find(c => c.name.toLowerCase() === fromAccountName.toLowerCase());
         if (!clientData) {
             throw new Error(`Akun Gmail dengan nama '${fromAccountName}' tidak ditemukan atau belum diinisialisasi.`);
@@ -142,15 +143,35 @@ class GmailService {
 
         try {
             const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+            const boundary = `----=${crypto.randomBytes(16).toString('hex')}`;
+
             const messageParts = [
                 `From: "${clientData.name}" <${clientData.emailAddress}>`,
                 `To: ${to}`,
-                'Content-Type: text/html; charset=utf-8',
-                'MIME-Version: 1.0',
                 `Subject: ${utf8Subject}`,
+                `MIME-Version: 1.0`,
+                `Content-Type: multipart/mixed; boundary="${boundary}"`,
                 '',
-                body
+                `--${boundary}`,
+                'Content-Type: text/html; charset=utf-8',
+                '',
+                body,
+                ''
             ];
+
+            if (attachment) {
+                messageParts.push(`--${boundary}`);
+                messageParts.push(`Content-Type: ${attachment.mimetype}`);
+                messageParts.push('MIME-Version: 1.0');
+                messageParts.push('Content-Transfer-Encoding: base64');
+                messageParts.push(`Content-Disposition: attachment; filename="${attachment.filename}"`);
+                messageParts.push('');
+                messageParts.push(attachment.data);
+                messageParts.push('');
+            }
+
+            messageParts.push(`--${boundary}--`);
+
             const message = messageParts.join('\n');
 
             const encodedMessage = Buffer.from(message)

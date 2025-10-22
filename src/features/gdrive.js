@@ -226,7 +226,20 @@ export default {
 
             const hasMedia = message.hasMedia || message._data?.quotedMsg?.hasMedia;
             if (!hasMedia) {
-                await message.reply('⚠️ Silakan kirim atau reply file/media yang ingin diupload ke Google Drive.\n\nCommand yang tersedia:\n/gdrive -folder [nama] : Buat folder baru\n/gdrive folder [nama] : Lanjut upload ke folder yang ada\n/gdrive folders : Lihat daftar folder\n/gdrive rename [lama] [baru] : Ganti nama folder\n/gdrive status : Cek status upload\n\n*Admin Commands:*\n/gdrive accounts : Lihat daftar akun Google Drive\n/gdrive set-account [nama_akun] : Ganti akun Google Drive aktif');
+                await message.reply(
+                    '*Perintah Google Drive*\n\n' +
+                    'Gunakan perintah ini untuk mengelola file di Google Drive.\n\n' +
+                    '*Sub-perintah yang tersedia:*\n' +
+                    '`/gdrive -folder [nama]` - Buat folder baru\n' +
+                    '`/gdrive folder [nama]` - Lanjut upload ke folder yang ada\n' +
+                    '`/gdrive folders` - Lihat daftar folder\n' +
+                    '`/gdrive rename [lama] [baru]` - Ganti nama folder\n' +
+                    '`/gdrive status` - Cek status upload\n' +
+                    '`/gdrive done` - Selesai upload ke folder\n\n' +
+                    '*Admin Commands:*\n' +
+                    '`/gdrive accounts` - Lihat daftar akun Google Drive\n' +
+                    '`/gdrive set-account [nama_akun]` - Ganti akun Google Drive aktif'
+                );
                 return;
             }
 

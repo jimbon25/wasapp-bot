@@ -232,8 +232,8 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Fitur Baru (Features)
 
-*   **Fitur Pengiriman Email via Gmail**: Pengguna kini dapat mengirim email langsung dari WhatsApp.
-    *   Menambahkan perintah `/gmail send <penerima> "<subjek>" <pesan>` untuk membuat dan mengirim email.
+*   **Fitur Pengiriman Email via Gmail**: Pengguna kini dapat mengirim email, termasuk dengan lampiran, langsung dari WhatsApp.
+    *   Menambahkan perintah `/gmail send` dengan dukungan untuk lampiran saat me-reply file.
     *   Menambahkan sistem "akun aktif" dengan perintah `/gmail accounts` dan `/gmail set-account [nama_akun]` untuk memilih akun pengirim.
 *   **Restart Otomatis untuk Konfigurasi Baru**: Bot kini dapat mendeteksi perubahan pada konfigurasi akun Gmail (penambahan, penghapusan, atau otorisasi baru) dan akan secara otomatis me-restart dirinya sendiri untuk menerapkan perubahan tersebut. Pengguna tidak perlu lagi me-restart service secara manual.
 *   **Unduh Lampiran Gmail**: Pengguna sekarang dapat mengunduh lampiran email langsung dari WhatsApp dengan membalas pesan notifikasi Gmail menggunakan perintah `/gmail download [nomor]`.
@@ -241,6 +241,7 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 #### Perubahan & Peningkatan (Changes & Improvements)
 
+*   **Peningkatan Keamanan Token Google Drive**: Semua token otorisasi Google Drive sekarang dienkripsi. Token lama akan dimigrasikan ke format terenkripsi secara otomatis saat fitur digunakan pertama kali.
 *   **Peningkatan Stabilitas: Implementasi Graceful Shutdown**: Bot sekarang menggunakan mekanisme *graceful shutdown* saat melakukan restart otomatis (misalnya setelah perubahan konfigurasi Gmail). Bot akan berhenti menerima perintah baru dan menunggu semua tugas yang sedang berjalan (seperti upload atau download) selesai sebelum me-restart. Hal ini mencegah proses terputus di tengah jalan dan meningkatkan keandalan secara keseluruhan.
 *   **Peningkatan Skrip Setup Gmail**: Skrip `setup-gmail.js` kini lebih mudah digunakan. Pengguna dapat memasukkan nomor telepon target dalam format biasa (misalnya, `0812...`) dan skrip akan secara otomatis memformatnya ke format WhatsApp yang benar (`62812...@c.us`).
 *   **Peningkatan Notifikasi Gmail**:

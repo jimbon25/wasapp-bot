@@ -4,13 +4,22 @@ import fs from 'fs';
 import fsPromises from 'fs/promises';
 import path from 'path';
 import logger from '../../utils/common/logger.js';
+import config from '../../config.js';
 import { FileManager } from '../../utils/fileManagement/fileManager.js';
 import activeDriveAccountManager from '../../utils/gdrive/activeDriveAccountManager.js';
+import EncryptionUtil from '../../utils/common/encryptionUtil.js';
 
 class GoogleDriveService {
     constructor() {
         this.fileManager = new FileManager();
         this.driveClientsCache = new Map();
+        const secretKey = config.mega.credentialsSecret;
+        if (secretKey) {
+            this.encryptionUtil = new EncryptionUtil(secretKey);
+        } else {
+            logger.warn('MEGA_CREDENTIALS_SECRET is not set. Google Drive token encryption/decryption will be disabled.');
+            this.encryptionUtil = null;
+        }
     }
 
     async _getDriveClient() {
@@ -20,6 +29,7 @@ class GoogleDriveService {
             throw new Error('No active Google Drive account is configured. Please run the setup script.');
         }
 
+        // Return cached client if available
         if (this.driveClientsCache.has(activeAccount.accountName)) {
             return { client: this.driveClientsCache.get(activeAccount.accountName), config: activeAccount };
         }
@@ -32,11 +42,35 @@ class GoogleDriveService {
                 credentials.installed.redirect_uris[0]
             );
 
-            const tokens = JSON.parse(await fsPromises.readFile(activeAccount.tokenPath, 'utf8'));
+            const tokenContent = await fsPromises.readFile(activeAccount.tokenPath, 'utf8');
+            let tokens;
+
+            try {
+                // First, assume the token is encrypted
+                if (!this.encryptionUtil) throw new Error('Encryption utility is not available.');
+                const decryptedToken = this.encryptionUtil.decrypt(tokenContent);
+                tokens = JSON.parse(decryptedToken);
+            } catch (e) {
+                // If decryption fails, assume it's a plaintext (old) token and migrate it
+                logger.warn(`Could not decrypt GDrive token for ${activeAccount.accountName}. Assuming plaintext and attempting to migrate.`);
+                try {
+                    tokens = JSON.parse(tokenContent);
+                    if (this.encryptionUtil) {
+                        const encryptedTokens = this.encryptionUtil.encrypt(JSON.stringify(tokens));
+                        await fsPromises.writeFile(activeAccount.tokenPath, encryptedTokens, 'utf8');
+                        logger.info(`Successfully migrated and encrypted GDrive token for ${activeAccount.accountName}.`);
+                    }
+                } catch (parseError) {
+                    logger.error(`Failed to parse GDrive token for ${activeAccount.accountName} as JSON after decryption failure. Please re-authorize the account.`, parseError);
+                    throw new Error(`Invalid token file for ${activeAccount.accountName}.`);
+                }
+            }
+
             oauth2Client.setCredentials(tokens);
 
             const drive = google.drive({ version: 'v3', auth: oauth2Client });
             
+            // Cache the new client
             this.driveClientsCache.set(activeAccount.accountName, drive);
             logger.info(`Google Drive client initialized for account: ${activeAccount.accountName}`);
 
