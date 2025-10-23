@@ -12,11 +12,11 @@ export default {
     description: 'Downloads content from a given URL.',
     requiredPermissions: ['media'],
     async execute(message, args) {
-        taskManager.increment();
+        taskManager.increment('download:execute');
         const url = args[0];
         if (!url) {
             await message.reply('Format salah. Gunakan: /download <URL>');
-            taskManager.decrement();
+            taskManager.decrement('download:execute');
             return;
         }
 
@@ -71,7 +71,7 @@ export default {
                 await message.reply(errorMessage);
             }
         } finally {
-            taskManager.decrement();
+            taskManager.decrement('download:execute');
         }
     }
 };

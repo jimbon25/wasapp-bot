@@ -8,7 +8,7 @@ export default {
     description: 'Bertanya kepada AI untuk jawaban akademis.',
     requiredPermissions: ['ai'],
     async execute(message, args) {
-        taskManager.increment();
+        taskManager.increment('ask:execute');
         try {
 
             const content = args.join(' ');
@@ -27,7 +27,7 @@ export default {
             logger.error('Error executing ask command:', error);
             await message.reply('✘ Terjadi kesalahan pada perintah /ask.');
         } finally {
-            taskManager.decrement();
+            taskManager.decrement('ask:execute');
         }
     }
 };

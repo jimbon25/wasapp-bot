@@ -11,7 +11,7 @@ const command = {
     description: 'Convert Word document to PDF',
     requiredPermissions: ['media'],
     async execute(message) {
-        taskManager.increment();
+        taskManager.increment('word2pdf:execute');
         try {
 
             let docMedia;
@@ -88,7 +88,7 @@ const command = {
             console.error('Error in word2pdf command:', error);
             await message.reply('✗ Sorry, there was an error converting your document. Please try again.');
         } finally {
-            taskManager.decrement();
+            taskManager.decrement('word2pdf:execute');
         }
     }
 };

@@ -33,9 +33,13 @@ class RedisManager extends EventEmitter {
     }
 
     async connect() {
+        if (this.client && this.isConnected) {
+            return this.client;
+        }
+
         try {
             if (this.client) {
-                console.log('Redis client already exists, disconnecting...');
+                console.log('Redis client already exists but is not connected, disconnecting...');
                 this._manuallyDisconnected = true;
                 
                 await new Promise((resolve) => {

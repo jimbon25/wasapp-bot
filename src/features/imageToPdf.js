@@ -65,7 +65,7 @@ export default {
     description: 'Konversi gambar ke PDF secara langsung.',
     requiredPermissions: ['media'],
     async execute(msg, args = []) {
-        taskManager.increment();
+        taskManager.increment('topdf:execute');
         try {
             const mediaMsg = msg.hasMedia ? msg : (msg.hasQuotedMsg ? await msg.getQuotedMessage() : null);
 
@@ -81,7 +81,7 @@ export default {
             logger.error('Error in /topdf command execution:', error);
             await msg.reply('✘ Terjadi kesalahan saat memproses permintaan Anda.');
         } finally {
-            taskManager.decrement();
+            taskManager.decrement('topdf:execute');
         }
     }
 };

@@ -11,7 +11,7 @@ export default {
     name: 'gdrive',
     
     async handleMediaMessage(message) {
-        taskManager.increment();
+        taskManager.increment('gdrive:handleMediaMessage');
         try {
             const userId = message.author || message.from;
             const session = await uploadSessionService.getSession(userId);
@@ -78,13 +78,13 @@ export default {
             logger.error('Error handling media message:', error);
             return false;
         } finally {
-            taskManager.decrement();
+            taskManager.decrement('gdrive:handleMediaMessage');
         }
     },
 
     adminOnly: true,
     async execute(message, args) {
-        taskManager.increment();
+        taskManager.increment('gdrive:execute');
         try {
             const userId = message.author || message.from;
             const subCommand = args[0];
@@ -296,7 +296,7 @@ export default {
             logger.error('Error in gdrive command', { error: error.message });
             throw error;
         } finally {
-            taskManager.decrement();
+            taskManager.decrement('gdrive:execute');
         }
     }
 };

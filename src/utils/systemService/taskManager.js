@@ -6,14 +6,14 @@ class TaskManager {
         logger.info('TaskManager initialized.');
     }
 
-    increment() {
+    increment(taskName = 'unnamed') {
         this.activeTasks++;
-        logger.info(`Task started. Active tasks: ${this.activeTasks}`);
+        logger.info(`[Task Start] ${taskName}. Active tasks: ${this.activeTasks}`);
     }
 
-    decrement() {
+    decrement(taskName = 'unnamed') {
         this.activeTasks = Math.max(0, this.activeTasks - 1);
-        logger.info(`Task finished. Active tasks: ${this.activeTasks}`);
+        logger.info(`[Task End] ${taskName}. Active tasks: ${this.activeTasks}`);
     }
 
     getActiveCount() {

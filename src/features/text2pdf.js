@@ -12,7 +12,7 @@ export default {
     usage: '/text2pdf <teks>',
     
     async execute(message, args) {
-        taskManager.increment();
+        taskManager.increment('text2pdf:execute');
         const timestamp = new Date().getTime();
         const tempTextFile = fileManager.getPath(FILE_TYPES.TEMP, `text_${timestamp}.txt`);
         const outputPdfFile = fileManager.getPath(FILE_TYPES.TEMP, `text_${timestamp}.pdf`);
@@ -58,7 +58,7 @@ export default {
                 logger.warn('Error cleaning up temporary files after error:', cleanupError);
             }
         } finally {
-            taskManager.decrement();
+            taskManager.decrement('text2pdf:execute');
         }
     }
 };

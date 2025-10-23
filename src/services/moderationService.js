@@ -114,6 +114,10 @@ class ModerationService {
     async checkMessageForForbiddenWords(message) {
         const chat = await message.getChat();
 
+        if (chat.id._serialized === 'status@broadcast') {
+            return false;
+        }
+
         if (!chat.isGroup) {
             logger.info('Message not in group, skipping moderation');
             return false;

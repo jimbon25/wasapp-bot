@@ -8,7 +8,7 @@ export default {
     description: 'Mengobrol santai dengan AI.',
     requiredPermissions: ['ai'],
     async execute(message, args) {
-        taskManager.increment();
+        taskManager.increment('talk:execute');
         try {
 
             const content = args.join(' ');
@@ -27,7 +27,7 @@ export default {
             logger.error('Error executing talk command:', error);
             await message.reply('✘ Terjadi kesalahan pada perintah /talk.');
         } finally {
-            taskManager.decrement();
+            taskManager.decrement('talk:execute');
         }
     }
 };

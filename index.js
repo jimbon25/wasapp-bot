@@ -17,6 +17,10 @@ import taskManager from './src/utils/systemService/taskManager.js';
 
 dotenv.config();
 
+logger.info('========================================');
+logger.info('         STARTING WHATSAPP BOT          ');
+logger.info('========================================');
+
 global.isShuttingDown = false;
 
 try {
