@@ -6,6 +6,7 @@ import { FileManager } from '../utils/fileManagement/fileManager.js';
 import taskManager from '../utils/systemService/taskManager.js';
 import config from '../config.js';
 import activeDriveAccountManager from '../utils/gdrive/activeDriveAccountManager.js';
+import { handleGDriveAccountSetup, handleGDriveAccountDeletion } from '../handlers/gdriveAccountHandler.js';
 
 export default {
     name: 'gdrive',
@@ -89,12 +90,24 @@ export default {
             const userId = message.author || message.from;
             const subCommand = args[0];
 
+            if (subCommand === 'add-account') {
+                const accountArgs = args.slice(1);
+                await handleGDriveAccountSetup(message, message.client, accountArgs);
+                return;
+            }
+
+            if (subCommand === 'remove-account') {
+                const accountArgs = args.slice(1);
+                await handleGDriveAccountDeletion(message, message.client, accountArgs);
+                return;
+            }
+
             if (subCommand === 'accounts') {
                 const allAccounts = config.apis.googleDriveAccounts;
                 const activeAccount = await activeDriveAccountManager.getActiveAccount();
 
                 if (!allAccounts || allAccounts.length === 0) {
-                    await message.reply('ℹ️ Tidak ada akun Google Drive yang terkonfigurasi.');
+                    await message.reply('Tidak ada akun Google Drive yang terkonfigurasi.');
                     return;
                 }
 
@@ -189,12 +202,12 @@ export default {
             if (subCommand === 'status') {
                 const session = await uploadSessionService.getSession(userId);
                 if (!session) {
-                    await message.reply('ℹ️ Tidak ada sesi upload yang aktif.');
+                    await message.reply('Tidak ada sesi upload yang aktif.');
                     return;
                 }
                 
                 await message.reply(
-                    '📊 Status Upload:\n' +
+                    'Status Upload:\n' +
                     `Folder: ${session.folderName}\n` +
                     `File terupload: ${session.uploadCount || 0}`
                 );
@@ -238,6 +251,8 @@ export default {
                     '`/gdrive done` - Selesai upload ke folder\n\n' +
                     '*Admin Commands:*\n' +
                     '`/gdrive accounts` - Lihat daftar akun Google Drive\n' +
+                    '`/gdrive add-account [nama_akun]` - Tambah akun Google Drive baru\n' +
+                    '`/gdrive remove-account` - Hapus akun Google Drive\n' +
                     '`/gdrive set-account [nama_akun]` - Ganti akun Google Drive aktif'
                 );
                 return;
