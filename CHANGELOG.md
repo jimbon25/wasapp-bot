@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.2] - 2025-10-24
+
+### Added
+- Fitur menghapus akun Gmail langsung dari WhatsApp melalui perintah `/gmail remove-account`
+  - Konfirmasi penghapusan dengan keyword "CONFIRM"
+  - Pembersihan file token otomatis
+  - Penanganan error yang aman
+
+### Changed
+- Perbaikan struktur kode pada handlers Gmail
+- Peningkatan modularitas dengan exported functions
+
 ## [2.1.1] - 2025-10-24
 
 ### Added

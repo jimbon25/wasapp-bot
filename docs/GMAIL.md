@@ -272,6 +272,18 @@ Anda dapat mengelola seluruh fitur Gmail secara dinamis melalui perintah WhatsAp
     Mengganti akun Gmail yang akan digunakan untuk mengirim email.
     *Contoh:* `/gmail set-account Pribadi`
 
+-   `/gmail add-account`
+    Menambahkan akun Gmail baru ke dalam sistem.
+    Bot akan memandu proses setup melalui chat.
+
+-   `/gmail remove-account`
+    Menghapus akun Gmail yang sudah terdaftar.
+    Perintah ini akan:
+    1. Meminta konfirmasi dengan mengetik "CONFIRM"
+    2. Menghapus token dan kredensial terkait
+    3. Membersihkan cache dan konfigurasi
+    *Note: Perintah ini hanya dapat digunakan oleh admin.*
+
 -   `/gmail send <penerima> "<subjek>" <isi pesan>`
     Mengirim email dari akun yang sedang aktif.
     *Contoh:* `/gmail send teman@email.com "Jadwal Rapat" Jangan lupa rapat jam 2 siang ya.`

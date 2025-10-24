@@ -2,12 +2,12 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import http from 'http';
-import open from 'open';
-import url from 'url';
 import logger from '../utils/common/logger.js';
 import config from '../config.js';
 import EncryptionUtil from '../utils/common/encryptionUtil.js';
 import { google } from 'googleapis';
+import securityManager from '../utils/systemService/securityManager.js';
+import MessageCollector from '../utils/messageHandling/messageCollector.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GMAIL_ACCOUNTS_JSON_PATH = path.join(process.cwd(), 'src/data/credentials/gmailCredentials', 'gmail_accounts.json');
@@ -29,7 +29,7 @@ async function getAvailablePort(startPort = 3000) {
     });
 }
 
-async function loadGmailAccounts() {
+export async function loadGmailAccounts() {
     try {
         const jsonData = await fs.readFile(GMAIL_ACCOUNTS_JSON_PATH, 'utf8');
         return JSON.parse(jsonData);
@@ -40,7 +40,7 @@ async function loadGmailAccounts() {
     }
 }
 
-async function saveGmailAccounts(accounts) {
+export async function saveGmailAccounts(accounts) {
     try {
         await fs.writeFile(GMAIL_ACCOUNTS_JSON_PATH, JSON.stringify(accounts, null, 2));
     } catch (error) {
@@ -48,10 +48,6 @@ async function saveGmailAccounts(accounts) {
         throw new Error('Could not save account configuration.');
     }
 }
-
-import securityManager from '../utils/systemService/securityManager.js';
-
-import MessageCollector from '../utils/messageHandling/messageCollector.js';
 
 export async function handleGmailAccountSetup(msg, client, args) {
     // Hanya admin yang bisa menambah akun

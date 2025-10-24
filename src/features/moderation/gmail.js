@@ -4,6 +4,7 @@ import { redisManager } from '../../utils/redis/index.js';
 import pkg from 'whatsapp-web.js';
 import activeGmailAccountManager from '../../utils/gmail/activeGmailAccountManager.js';
 import { handleGmailAccountSetup } from '../../handlers/gmailAccountHandler.js';
+import { handleGmailAccountDeletion } from '../../handlers/gmailDeleteHandler.js';
 const { MessageMedia } = pkg;
 
 export default {
@@ -29,6 +30,11 @@ export default {
                         return;
                     }
                     await handleGmailAccountSetup(message, message.client, accountArgs);
+                    break;
+
+                case 'remove-account':
+                    const removeArgs = args.slice(1);
+                    await handleGmailAccountDeletion(message, message.client, removeArgs);
                     break;
 
                 case 'on':
@@ -189,6 +195,7 @@ export default {
                         'Gunakan perintah ini untuk mengelola akun Gmail Anda.\n\n' +
                         '*Sub-perintah yang tersedia:*\n' +
                         '`/gmail add-account <nama>` - Tambah akun Gmail baru\n' +
+                        '`/gmail remove-account <nama>` - Hapus akun Gmail\n' +
                         '`/gmail send <to> "<subj>" <body>` - Kirim email\n' +
                         '`/gmail accounts` - Lihat daftar akun\n' +
                         '`/gmail set-account <nama>` - Pilih akun aktif\n' +
