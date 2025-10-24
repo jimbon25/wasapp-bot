@@ -2,6 +2,8 @@
 # Data folder structure
 src/data/credentials/*.json
 src/data/credentials/gmailCredentials/
+src/data/credentials/backup/
+src/data/credentials/backup/**/*
 !src/data/credentials/example/
 !src/data/credentials/example/*.example.json
 

@@ -1,6 +1,48 @@
-# Panduan Fitur Baru v2.1.0
+# Panduan Fitur Baru v2.1.3
 
-## 1. Otomatisasi Proses Otorisasi
+## 1. Health Check System
+
+### Monitoring Kesehatan Akun
+- Perintah `/healthcheck` untuk memeriksa status semua akun
+- Deteksi otomatis akun yang bermasalah
+- Saran tindakan yang perlu diambil
+- Notifikasi ke admin untuk masalah serius
+
+### Format Laporan Health Check:
+```
+*📊 Status Kesehatan Akun*
+
+*✅ Akun Sehat:*
+- GMAIL: [nama_akun]
+- DRIVE: [nama_akun]
+
+*❌ Akun Bermasalah:*
+- GMAIL: [nama_akun]
+  Masalah: [deskripsi_masalah]
+- DRIVE: [nama_akun]
+  Masalah: [deskripsi_masalah]
+
+Total Akun: XX
+Sehat: XX
+Bermasalah: XX
+```
+
+## 2. Manajemen Akun Terintegrasi
+
+### Perintah Baru:
+- `/gmail add-account [nama]` - Tambah akun Gmail
+- `/gmail remove-account [nama]` - Hapus akun Gmail
+- `/gdrive add-account [nama]` - Tambah akun Drive
+- `/gdrive remove-account [nama]` - Hapus akun Drive
+- `/reauth [tipe] [nama]` - Otorisasi ulang akun
+
+### Fitur Keamanan:
+- Konfirmasi penghapusan dengan keyword "CONFIRM"
+- Backup token otomatis sebelum penghapusan
+- Enkripsi token yang disimpan
+- Validasi nama akun dan input
+
+## 3. Otomatisasi Proses Otorisasi
 
 ### Gmail dan Google Drive
 - Browser terbuka otomatis saat proses otorisasi

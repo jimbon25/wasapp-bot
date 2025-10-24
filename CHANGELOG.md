@@ -1,9 +1,36 @@
 # Changelog
 
+## [2.1.3] - 2025-10-24
+
+### Added
+- Sistem Health Check Otomatis
+  - Pengecekan kesehatan akun setiap 6 jam
+  - Deteksi otomatis masalah token dan otorisasi
+  - Notifikasi proaktif untuk akun bermasalah
+  - Saran tindakan perbaikan
+
+- Perintah `/healthcheck` untuk monitoring kesehatan akun
+  - Pengecekan status token dan otorisasi
+  - Notifikasi akun yang bermasalah
+  - Saran tindakan yang perlu diambil
+
+### Changed
+- Restrukturisasi penyimpanan token
+  - Pemisahan token Gmail dan Google Drive ke folder terpisah
+  - Peningkatan keamanan dengan enkripsi token
+  - Path token yang lebih terorganisir
+
+### Fixed
+- Perbaikan proses penghapusan akun Gmail dan Google Drive
+- Perbaikan path token yang tidak konsisten
+- Perbaikan error handling pada health check
+
 ## [2.1.2] - 2025-10-24
 
 ### Added
-- Fitur menghapus akun Gmail langsung dari WhatsApp melalui perintah `/gmail remove-account`
+- Fitur manajemen akun melalui WhatsApp untuk Gmail dan Google Drive
+  - Perintah `/gmail add-account` dan `/gdrive add-account` untuk menambah akun baru
+  - Perintah `/gmail remove-account` dan `/gdrive remove-account` untuk menghapus akun
   - Konfirmasi penghapusan dengan keyword "CONFIRM"
   - Pembersihan file token otomatis
   - Penanganan error yang aman

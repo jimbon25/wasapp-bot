@@ -83,10 +83,20 @@ Bot WhatsApp multifungsi dengan fitur AI chat (Gemini), Instagram downloader, tr
 
 ### Sistem & Performa
 
-- **Redis Integration**: Manajemen sesi, caching, antrian pesan, rate limiting, dan monitoring.
-- **Deteksi Virtex**: Memvalidasi pesan untuk mendeteksi teks berbahaya atau spam.
-- **Manajemen File Otomatis**: Membersihkan file temporary secara otomatis.
-- **Notifikasi Telegram**: Mengirim notifikasi ke admin jika terjadi error kritis.
+- **Health Check System**: Monitoring kesehatan akun secara otomatis
+  - Pengecekan otomatis setiap 6 jam
+  - Notifikasi proaktif untuk akun bermasalah
+  - Status token dan otorisasi real-time
+  - Saran perbaikan otomatis
+  - Perintah manual `/healthcheck` untuk pengecekan instan
+- **Manajemen Akun Terintegrasi**:
+  - Setup dan penghapusan akun via WhatsApp
+  - Otorisasi ulang dengan `/reauth`
+  - Pemisahan penyimpanan token
+- **Redis Integration**: Manajemen sesi, caching, antrian pesan, rate limiting, dan monitoring
+- **Deteksi Virtex**: Memvalidasi pesan untuk mendeteksi teks berbahaya atau spam
+- **Manajemen File Otomatis**: Membersihkan file temporary secara otomatis
+- **Notifikasi Telegram**: Mengirim notifikasi ke admin jika terjadi error kritis
 
 ---
 
@@ -158,10 +168,11 @@ Konfigurasi bot diatur melalui file `.env`.
 
 #### 3.4.1. Linux (systemd)
 Untuk menjalankan bot sebagai service di Linux:
-1.  **Edit File Service**: Buka `systemd/wabot.service` dan sesuaikan `User`, `Group`, dan path di `WorkingDirectory` dan `ExecStart` agar sesuai dengan lingkungan server Anda.
+1.  **Edit File Service**: Buka `systemd/wabot.service` dan `systemd/unoconv-listener.service`, sesuaikan `User`, `Group`, dan path di `WorkingDirectory` dan `ExecStart` agar sesuai dengan lingkungan server Anda.
 2.  **Salin File Service**:
     ```bash
     sudo cp systemd/wabot.service /etc/systemd/system/
+    sudo cp systemd/unoconv-listener.service /etc/systemd/system/
     ```
 3.  **Reload Systemd**:
     ```bash
@@ -169,11 +180,22 @@ Untuk menjalankan bot sebagai service di Linux:
     ```
 4.  **Jalankan Service**:
     ```bash
+    sudo systemctl start unoconv-listener
     sudo systemctl start wabot
     ```
 5.  **Aktifkan Auto-start**:
     ```bash
+    sudo systemctl enable unoconv-listener
     sudo systemctl enable wabot
+    ```
+6.  **Verifikasi Status**:
+    ```bash
+    # Cek status service
+    sudo systemctl status wabot
+    sudo systemctl status unoconv-listener
+    
+    # Cek log untuk memastikan health check berjalan
+    sudo journalctl -u wabot -n 50 | grep "health check"
     ```
 
 #### 3.4.2. Windows 11
@@ -215,9 +237,19 @@ Berikut adalah daftar perintah utama yang tersedia.
 | `/text2pdf [teks]` | Mengkonversi teks panjang menjadi file PDF yang diformat rapi. |
 | `/download [URL]` | Mengunduh post/reel/story dari Instagram. |
 
+### Monitoring & Akun
+| Command | Deskripsi |
+|---|---|
+| `/healthcheck` | Memeriksa status kesehatan semua akun Gmail dan Drive |
+| `/reauth [tipe] [nama]` | Mengotorisasi ulang akun yang bermasalah |
+| `/gmail add-account [nama]` | Menambahkan akun Gmail baru |
+| `/gmail remove-account [nama]` | Menghapus akun Gmail |
+| `/gdrive add-account [nama]` | Menambahkan akun Google Drive baru |
+| `/gdrive remove-account [nama]` | Menghapus akun Google Drive |
+
 ### Cloud Storage
 | Command | Deskripsi |
-|---|---|---|
+|---|---|
 | `/gdrive [caption]` | Mengunggah file (reply atau kirim dengan caption) ke folder Drive utama. |
 | `/gdrive -folder [nama]` | Membuat folder baru dan memulai sesi upload ke folder tersebut. |
 | `/gdrive folder [nama]` | Melanjutkan sesi upload ke folder yang sudah ada. |

@@ -6,5 +6,9 @@ static/*.json
 credentials/*.json
 !credentials/example/*.example.json
 
+# Ignore backup folder and its contents
+credentials/backup/
+credentials/backup/**/*
+
 # Keep .gitkeep files
 !.gitkeep

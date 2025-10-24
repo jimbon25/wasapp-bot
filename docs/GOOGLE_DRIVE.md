@@ -91,6 +91,8 @@ Setelah file `credentials.json` ditempatkan, proses otorisasi dan konfigurasi me
 | `/gdrive done` | Mengakhiri sesi upload. |
 | `/gdrive status` | Melihat status sesi upload yang sedang berjalan. |
 | `/gdrive accounts` | (Admin) Melihat daftar akun Google Drive yang terkonfigurasi dan akun yang sedang aktif. |
+| `/gdrive add-account [nama_akun]` | (Admin) Menambahkan akun Google Drive baru ke sistem. Bot akan memandu proses setup. |
+| `/gdrive remove-account` | (Admin) Menghapus akun Google Drive yang sudah terdaftar. Memerlukan konfirmasi. |
 | `/gdrive set-account [nama_akun]` | (Admin) Mengganti akun Google Drive yang aktif untuk bot. *Nama akun tidak masalah huruf besar/kecil.* |
 
 ---

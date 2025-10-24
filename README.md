@@ -4,6 +4,11 @@ Bot WhatsApp multifungsi dengan fitur AI chat (Gemini), Instagram downloader, tr
 
 ## Fitur Utama
 
+### Sistem & Keamanan
+-   **Health Check System**: Pemantauan kesehatan bot secara real-time dan pemulihan otomatis
+-   **Token Security**: Enkripsi dan manajemen token yang aman untuk layanan Google
+-   **Error Recovery**: Deteksi dan pemulihan otomatis untuk berbagai masalah sistem
+
 ### AI & Chat
 -   **AI Chat (Gemini)**: Interaksi cerdas dengan dua mode: `/ask` untuk jawaban akademis dan `/talk` untuk percakapan santai.
 -   **Memory Management**: Mengingat konteks percakapan sebelumnya.
@@ -57,6 +62,8 @@ Bot WhatsApp multifungsi dengan fitur AI chat (Gemini), Instagram downloader, tr
 -   **FFmpeg**: Untuk pemrosesan media
 -   **Sharp**: Untuk pemrosesan gambar (stiker, rmbg)
 -   **unoconv & LibreOffice**: Untuk konversi dokumen ke PDF
+-   **node-cron**: Untuk penjadwalan health check dan maintenance
+-   **crypto-js**: Untuk enkripsi token dan kredensial sensitif
 
 ## Setup & Konfigurasi
 
@@ -120,17 +127,28 @@ Untuk menjalankan bot sebagai service di Linux, ikuti langkah-langkah berikut:
     ```bash
 sudo cp systemd/wabot.service /etc/systemd/system/
     ```
-2.  Reload systemd daemon:
+2.  Copy service unoconv listener (untuk konversi dokumen):
+    ```bash
+sudo cp systemd/unoconv-listener.service /etc/systemd/system/
+    ```
+3.  Reload systemd daemon:
     ```bash
 sudo systemctl daemon-reload
     ```
-3.  Start service:
+4.  Start kedua service:
     ```bash
+sudo systemctl start unoconv-listener
 sudo systemctl start wabot
     ```
-4.  Enable autostart:
+5.  Enable autostart untuk kedua service:
     ```bash
+sudo systemctl enable unoconv-listener
 sudo systemctl enable wabot
+    ```
+6.  Verifikasi status service dan health check:
+    ```bash
+sudo systemctl status wabot
+sudo systemctl status unoconv-listener
     ```
 
 ### Windows 11
@@ -228,34 +246,43 @@ Untuk troubleshooting lebih lanjut, terutama di Windows, lihat [Panduan Troubles
 
 ## Changelog
 
-### Perubahan Terbaru
+### Perubahan Terbaru (v2.1.3)
 
-#### Fitur Baru (Features)
+#### Sistem & Keamanan
 
-*   **Fitur Pengiriman Email via Gmail**: Pengguna kini dapat mengirim email, termasuk dengan lampiran, langsung dari WhatsApp.
-    *   Menambahkan perintah `/gmail send` dengan dukungan untuk lampiran saat me-reply file.
-    *   Menambahkan sistem "akun aktif" dengan perintah `/gmail accounts` dan `/gmail set-account [nama_akun]` untuk memilih akun pengirim.
-*   **Restart Otomatis untuk Konfigurasi Baru**: Bot kini dapat mendeteksi perubahan pada konfigurasi akun Gmail (penambahan, penghapusan, atau otorisasi baru) dan akan secara otomatis me-restart dirinya sendiri untuk menerapkan perubahan tersebut. Pengguna tidak perlu lagi me-restart service secara manual.
-*   **Unduh Lampiran Gmail**: Pengguna sekarang dapat mengunduh lampiran email langsung dari WhatsApp dengan membalas pesan notifikasi Gmail menggunakan perintah `/gmail download [nomor]`.
-*   **Pembatalan Auto-Upload**: Menambahkan perintah baru `/upload cancel`. Admin sekarang dapat membatalkan sesi pengumpulan media untuk fitur `AUTO_UPLOAD` sebelum bot mengirimkan prompt konfirmasi.
+*   **Peningkatan Sistem Health Check**: 
+    * Implementasi sistem pemantauan kesehatan bot yang komprehensif
+    * Deteksi dan penanganan otomatis untuk berbagai kondisi error
+    * Pemulihan otomatis untuk masalah koneksi WhatsApp
+    * Perintah `/healthcheck` untuk memeriksa status komponen sistem
 
-#### Perubahan & Peningkatan (Changes & Improvements)
+*   **Peningkatan Keamanan Token**:
+    * Implementasi sistem enkripsi token yang lebih aman untuk kredensial Google Drive dan Gmail
+    * Migrasi otomatis token lama ke format terenkripsi
+    * Penyimpanan token yang lebih terstruktur dengan pemisahan untuk setiap layanan
+    * Peningkatan validasi dan penanganan error untuk manajemen token
 
-*   **Peningkatan Keamanan Token Google Drive**: Semua token otorisasi Google Drive sekarang dienkripsi. Token lama akan dimigrasikan ke format terenkripsi secara otomatis saat fitur digunakan pertama kali.
-*   **Peningkatan Stabilitas: Implementasi Graceful Shutdown**: Bot sekarang menggunakan mekanisme *graceful shutdown* saat melakukan restart otomatis (misalnya setelah perubahan konfigurasi Gmail). Bot akan berhenti menerima perintah baru dan menunggu semua tugas yang sedang berjalan (seperti upload atau download) selesai sebelum me-restart. Hal ini mencegah proses terputus di tengah jalan dan meningkatkan keandalan secara keseluruhan.
-*   **Peningkatan Skrip Setup Gmail**: Skrip `setup-gmail.js` kini lebih mudah digunakan. Pengguna dapat memasukkan nomor telepon target dalam format biasa (misalnya, `0812...`) dan skrip akan secara otomatis memformatnya ke format WhatsApp yang benar (`62812...@c.us`).
-*   **Peningkatan Notifikasi Gmail**:
-    *   Notifikasi sekarang menampilkan daftar lampiran yang ada di email.
-    *   Bot kini dapat mengirim notifikasi email **tanpa harus menandai email sebagai 'telah dibaca'** di akun Gmail Anda, memberikan kontrol penuh atas status inbox Anda.
-    *   Perilaku ini dapat diaktifkan melalui variabel baru di `.env`: `GMAIL_LEAVE_AS_UNREAD=true`.
-    *   Masa kedaluwarsa untuk jejak notifikasi di Redis kini juga dapat diatur melalui `GMAIL_NOTIFIED_ID_EXPIRY_DAYS`.
-*   **Notifikasi Gmail Real-time**: Fitur notifikasi Gmail dirombak total dari sistem *polling* menjadi *push notifications* menggunakan Google Cloud Pub/Sub. Kini mendukung notifikasi instan dari multi-akun Gmail dan menyertakan *direct link* ke pesan email. ([Lihat Dokumentasi Lengkap](./docs/GMAIL.md))
-*   **Sistem Batch Auto-Upload Menjadi Milik Grup**:
-    *   Fitur `AUTO_UPLOAD` sekarang mengumpulkan file media yang dikirim oleh **siapa saja** di dalam grup.
-    *   Pesan konfirmasi upload sekarang dikirim sebagai **pesan baru** ke grup, sehingga bisa direspons oleh admin mana pun.
+#### Perubahan & Peningkatan
 
-#### Perbaikan Bug (Fixes)
+*   **Restrukturisasi Manajemen Token**:
+    * Pemisahan penyimpanan token untuk Gmail dan Google Drive
+    * Sistem validasi token yang lebih robust
+    * Penanganan error yang lebih baik untuk kasus token kadaluarsa
+    * Migrasi otomatis dari format token lama
 
-*   **Perbaikan Sensitivitas Huruf Besar/Kecil Akun Google Drive:** Memperbaiki masalah di mana pergantian akun Google Drive gagal karena sensitivitas huruf besar/kecil pada nama akun.
-*   **Pengunduhan Lampiran Gmail**: Memperbaiki error `atob` yang terjadi karena salah encoding `base64`. Lampiran sekarang dapat diunduh dengan benar.
-*   **Perintah Admin pada Batch**: Memperbaiki bug di mana admin tidak dapat menjalankan perintah pada batch media yang dimulai oleh member biasa.
+*   **Perbaikan Path Handling**:
+    * Standardisasi path untuk penyimpanan token
+    * Pemisahan path untuk setiap layanan Google
+    * Peningkatan validasi path untuk mencegah konflik
+
+*   **Dokumentasi**:
+    * Pembaruan dokumentasi untuk mencerminkan perubahan sistem
+    * Penambahan informasi detail tentang sistem health check
+    * Panduan troubleshooting yang lebih lengkap
+    * Pembaruan changelog dan dokumentasi fitur
+
+#### Perbaikan Bug
+
+*   **Token Management**: Perbaikan masalah dengan `accountName` undefined saat menangani token
+*   **Path Resolution**: Perbaikan inkonsistensi dalam penanganan path token
+*   **Error Handling**: Peningkatan penanganan error untuk kasus token invalid atau kadaluarsa

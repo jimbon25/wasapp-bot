@@ -89,6 +89,13 @@ Information
 Cek status dan respon bot
 
 *Admin Commands*
+\`/healthcheck\`
+Cek kesehatan semua akun
+
+\`/reauth [tipe] [nama_akun]\`
+Otorisasi ulang akun Gmail/Drive
+*Contoh:* \`/reauth gmail Dimas\`
+
 \`/add [nomor]\`
 Tambah anggota ke grup
 
