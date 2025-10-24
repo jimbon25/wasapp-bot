@@ -6,11 +6,9 @@ const ACTIVE_ACCOUNT_KEY = 'gdrive:active_account_name';
 
 class ActiveDriveAccountManager {
     constructor() {
-        // No longer initialize this.accounts in constructor
     }
 
     _getAccountsFromConfig() {
-        // Dynamically get accounts from config when needed
         return config.apis.googleDriveAccounts || [];
     }
 
@@ -50,7 +48,6 @@ class ActiveDriveAccountManager {
         let activeAccountName = await client.get(ACTIVE_ACCOUNT_KEY);
 
         if (!activeAccountName) {
-            // If no active account is set in Redis, default to the first one in the config
             activeAccountName = accounts[0].accountName;
             await this.setActiveAccount(activeAccountName); // Set it in Redis for future calls
         }
@@ -58,7 +55,6 @@ class ActiveDriveAccountManager {
         const activeAccount = accounts.find(acc => acc.accountName.toLowerCase() === activeAccountName.toLowerCase());
 
         if (!activeAccount) {
-            // If the stored active account no longer exists, fall back to the first one
             logger.warn(`Active account "${activeAccountName}" not found in config, falling back to the first account.`);
             const fallbackAccount = accounts[0];
             await this.setActiveAccount(fallbackAccount.accountName);

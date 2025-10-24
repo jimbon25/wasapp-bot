@@ -190,6 +190,25 @@ const config = {
     notifyLevels: (process.env.TELEGRAM_NOTIFY_LEVELS || 'error,warn').split(','), // Comma-separated notification levels (e.g., 'error,warn,info')
   },
 
+  google: (() => {
+    try {
+      const credentialsPath = join(__dirname, './data/credentials/gmailCredentials/credentials-gmail-all.json');
+      const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8')).installed;
+      return {
+        clientId: credentials.client_id,
+        clientSecret: credentials.client_secret,
+        redirectUri: credentials.redirect_uris[0] || 'urn:ietf:wg:oauth:2.0:oob'
+      };
+    } catch (error) {
+      logger.error('Error loading Google credentials:', error);
+      return {
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        redirectUri: process.env.GOOGLE_REDIRECT_URI || 'urn:ietf:wg:oauth:2.0:oob'
+      };
+    }
+  })(),
+
   apiKeys: {
     gemini: process.env.GEMINI_API_KEY,       // Google Gemini API Key for AI features
     removebg: process.env.REMOVEBG_API_KEY,   // Remove.bg API Key for background removal

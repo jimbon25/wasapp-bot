@@ -1,9 +1,8 @@
-import fs from 'fs/promises';
-import path from 'path';
 import logger from '../utils/common/logger.js';
 import MessageCollector from '../utils/messageHandling/messageCollector.js';
 import securityManager from '../utils/systemService/securityManager.js';
 import { loadGmailAccounts, saveGmailAccounts } from './gmailAccountHandler.js';
+import tokenManager from '../utils/common/tokenManagerInstance.js';
 
 export async function handleGmailAccountDeletion(msg, client, args) {
     const isAuthorized = await securityManager.isAuthorized(msg, 'admin');
@@ -33,7 +32,6 @@ export async function handleGmailAccountDeletion(msg, client, args) {
             return;
         }
 
-        // Konfirmasi penghapusan
         await msg.reply(
             `*⚠️ Konfirmasi Penghapusan Akun Gmail*\n\n` +
             `Anda akan menghapus akun: *${accountToDelete.name}*\n` +
@@ -41,7 +39,6 @@ export async function handleGmailAccountDeletion(msg, client, args) {
             `Ketik *CONFIRM* untuk melanjutkan atau ketik apa saja untuk membatalkan.`
         );
 
-        // Tunggu konfirmasi
         const confirmCollector = new MessageCollector(
             client,
             async (response) => {
@@ -63,29 +60,28 @@ export async function handleGmailAccountDeletion(msg, client, args) {
             return;
         }
 
-        // Hapus file token
-        const tokenPath = path.join(process.cwd(), accountToDelete.tokenPath);
         try {
-            await fs.unlink(tokenPath);
-            logger.info(`Token file deleted: ${tokenPath}`);
+            const deleted = await tokenManager.gmail.deleteToken(accountToDelete.name, 'gmail');
+            if (deleted) {
+                logger.info(`Token deleted for Gmail account: ${accountToDelete.name}`);
+            } else {
+                logger.warn(`No token found for Gmail account: ${accountToDelete.name}`);
+            }
         } catch (error) {
-            logger.warn(`Could not delete token file: ${tokenPath}`, error);
+            logger.error('Error deleting token:', error);
         }
 
-        // Hapus akun dari konfigurasi
         const updatedAccounts = accounts.filter(acc => acc.name.toLowerCase() !== accountName.toLowerCase());
         await saveGmailAccounts(updatedAccounts);
 
         await msg.reply(
-            `*✅ Akun Gmail Berhasil Dihapus*\n\n` +
+            `*Akun Gmail Berhasil Dihapus*\n\n` +
             `*Nama Akun:* ${accountToDelete.name}\n\n` +
             'Bot akan restart otomatis untuk menerapkan perubahan.'
         );
 
-        // Tunggu sebentar untuk memastikan pesan terkirim
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Trigger restart bot
         logger.info(`Gmail account "${accountName}" successfully deleted. Restarting bot in 2 seconds...`);
         setTimeout(() => {
             process.exit(0);
