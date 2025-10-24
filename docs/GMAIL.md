@@ -181,7 +181,33 @@ GMAIL_SHARED_CREDENTIALS_PATH=src/data/credentials/gmailCredentials/credentials-
 
 ## 4. Langkah 3: Menambah dan Mengotorisasi Akun Gmail
 
-Manajemen dan otorisasi akun Gmail kini dilakukan melalui skrip interaktif yang menyimpan konfigurasi dalam file `src/data/static/gmail_accounts.json`.
+Ada dua cara untuk menambahkan dan mengotorisasi akun Gmail:
+
+### Metode 1: Melalui WhatsApp (Direkomendasikan)
+
+1. **Tambah Akun Baru via WhatsApp:**
+   - Ketik perintah: `/gmail add-account [nama_akun]`
+   - Contoh: `/gmail add-account Kantor`
+
+2. **Masukkan Nomor Target:**
+   - Bot akan meminta nomor WhatsApp untuk notifikasi
+   - Masukkan satu atau lebih nomor (pisahkan dengan koma)
+   - Format: `0812xxxx, 0857xxxx`
+
+3. **Proses Otorisasi:**
+   - Bot akan mengirim URL otorisasi Gmail
+   - Buka URL tersebut di browser Anda
+   - Login dengan akun Gmail yang ingin dihubungkan
+   - Setelah memberikan izin, Anda akan mendapat kode otorisasi
+   - Kirim kode tersebut ke bot
+
+4. **Selesai:**
+   - Bot akan mengkonfirmasi setup berhasil
+   - Bot akan restart otomatis untuk menerapkan konfigurasi
+
+### Metode 2: Melalui Terminal
+
+Untuk pengguna yang lebih teknis, Anda masih bisa menggunakan skrip interaktif:
 
 1.  **Jalankan Skrip Setup:**
     Di terminal, jalankan perintah:

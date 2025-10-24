@@ -3,6 +3,7 @@ import gmailService from '../../services/notificationServices/gmailService.js';
 import { redisManager } from '../../utils/redis/index.js';
 import pkg from 'whatsapp-web.js';
 import activeGmailAccountManager from '../../utils/gmail/activeGmailAccountManager.js';
+import { handleGmailAccountSetup } from '../../handlers/gmailAccountHandler.js';
 const { MessageMedia } = pkg;
 
 export default {
@@ -15,6 +16,21 @@ export default {
 
         try {
             switch (subCommand) {
+                case 'add-account':
+                    const accountArgs = args.slice(1);
+                    if (accountArgs.length === 0) {
+                        await message.reply(
+                            '*🔧 Setup Akun Gmail*\n\n' +
+                            'Untuk menambahkan akun baru, gunakan format:\n' +
+                            '`/gmail add-account [nama_akun]`\n\n' +
+                            'Contoh:\n' +
+                            '`/gmail add-account Kantor`'
+                        );
+                        return;
+                    }
+                    await handleGmailAccountSetup(message, message.client, accountArgs);
+                    break;
+
                 case 'on':
                     await gmailService.setPollingStatus(true);
                     await message.reply('Notifikasi Gmail diaktifkan.');
@@ -172,6 +188,7 @@ export default {
                         '*Perintah Gmail*\n\n' +
                         'Gunakan perintah ini untuk mengelola akun Gmail Anda.\n\n' +
                         '*Sub-perintah yang tersedia:*\n' +
+                        '`/gmail add-account <nama>` - Tambah akun Gmail baru\n' +
                         '`/gmail send <to> "<subj>" <body>` - Kirim email\n' +
                         '`/gmail accounts` - Lihat daftar akun\n' +
                         '`/gmail set-account <nama>` - Pilih akun aktif\n' +

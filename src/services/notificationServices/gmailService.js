@@ -200,22 +200,43 @@ class GmailService {
     async _ensureLabelExists(gmail, labelName) {
         try {
             const res = await gmail.users.labels.list({ userId: 'me' });
-            const existingLabel = res.data.labels.find(label => label.name === labelName);
+            // Cek lebih teliti dengan case-insensitive
+            const existingLabel = res.data.labels.find(label => 
+                label.name.toLowerCase() === labelName.toLowerCase() ||
+                label.name.replace(/\s+/g, '') === labelName.replace(/\s+/g, '')
+            );
 
             if (existingLabel) {
+                logger.info(`Found existing label '${existingLabel.name}' for requested label '${labelName}'`);
                 return { id: existingLabel.id, name: existingLabel.name };
             }
-            
-            const newLabel = await gmail.users.labels.create({
-                userId: 'me',
-                resource: {
-                    name: labelName,
-                    labelListVisibility: 'labelShow',
-                    messageListVisibility: 'show',
-                },
-            });
-            return { id: newLabel.data.id, name: newLabel.data.name };
 
+            try {            
+                const newLabel = await gmail.users.labels.create({
+                    userId: 'me',
+                    resource: {
+                        name: labelName,
+                        labelListVisibility: 'labelShow',
+                        messageListVisibility: 'show',
+                    },
+                });
+                logger.info(`Successfully created new label '${labelName}'`);
+                return { id: newLabel.data.id, name: newLabel.data.name };
+            } catch (createError) {
+                // Jika gagal membuat label baru, coba cek sekali lagi untuk menghindari race condition
+                const recheckRes = await gmail.users.labels.list({ userId: 'me' });
+                const recheckLabel = recheckRes.data.labels.find(label => 
+                    label.name.toLowerCase() === labelName.toLowerCase() ||
+                    label.name.replace(/\s+/g, '') === labelName.replace(/\s+/g, '')
+                );
+
+                if (recheckLabel) {
+                    logger.info(`Found label '${recheckLabel.name}' after creation attempt failed`);
+                    return { id: recheckLabel.id, name: recheckLabel.name };
+                }
+                
+                throw createError;
+            }
         } catch (error) {
             logger.error(`Failed to ensure Gmail label '${labelName}' exists.`, error);
             throw error;
