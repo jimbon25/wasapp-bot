@@ -2,6 +2,9 @@ import { google } from 'googleapis';
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
+import http from 'http';
+import open from 'open';
+import url from 'url';
 import config from '../src/config.js';
 import logger from '../src/utils/common/logger.js';
 import EncryptionUtil from '../src/utils/common/encryptionUtil.js';
@@ -40,6 +43,25 @@ function printHeader(title) {
     console.log(colors.cyan + '│' + ' '.repeat(titlePadding) + colors.bold + title + colors.reset + colors.cyan + ' '.repeat(width - title.length - titlePadding) + '│' + colors.reset);
     console.log(colors.cyan + '│' + ' '.repeat(width) + '│' + colors.reset);
     console.log(colors.cyan + '└' + '─'.repeat(width) + '┘' + colors.reset);
+}
+
+// --- Helper Functions ---
+async function getAvailablePort(startPort = 3000) {
+    return new Promise((resolve, reject) => {
+        const server = http.createServer();
+        server.listen(startPort, () => {
+            const port = server.address().port;
+            server.close(() => resolve(port));
+        });
+        server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                // Port sudah digunakan, coba port berikutnya
+                resolve(getAvailablePort(startPort + 1));
+            } else {
+                reject(err);
+            }
+        });
+    });
 }
 
 // --- Core Functions ---
@@ -212,18 +234,64 @@ async function selectAccount(accounts) {
 async function authorizeAccount(account) {
     try {
         const credentials = JSON.parse(fs.readFileSync(account.credentialsPath, 'utf8'));
-        const { client_secret, client_id, redirect_uris } = credentials.installed;
-        const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+        const { client_secret, client_id } = credentials.installed;
+        
+        // Gunakan localhost dengan port random untuk callback
+        const server = http.createServer();
+        const port = await getAvailablePort();
+        const redirectUrl = `http://localhost:${port}/oauth2callback`;
+        
+        const oAuth2Client = new google.auth.OAuth2(
+            client_id,
+            client_secret,
+            redirectUrl
+        );
 
         const authUrl = oAuth2Client.generateAuthUrl({
             access_type: 'offline',
             scope: ['https://www.googleapis.com/auth/gmail.modify']
         });
 
-        console.log(`\n${colors.yellow}Buka URL berikut di browser untuk mengotorisasi akun "${account.name}":${colors.reset}`);
-        console.log(colors.cyan, authUrl, colors.reset);
+        console.log(`\n${colors.yellow}Membuka browser untuk otorisasi akun "${account.name}"...${colors.reset}`);
+        
+        // Buat promise untuk menangkap kode otorisasi
+        const codePromise = new Promise((resolve, reject) => {
+            server.on('request', async (req, res) => {
+                try {
+                    const parsedUrl = url.parse(req.url, true);
+                    if (parsedUrl.pathname === '/oauth2callback') {
+                        const code = parsedUrl.query.code;
+                        if (code) {
+                            // Kirim halaman sukses
+                            res.writeHead(200, { 'Content-Type': 'text/html' });
+                            res.end(`
+                                <html>
+                                    <body style="background: #f0f2f5; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
+                                        <div style="background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
+                                            <h2 style="color: #4CAF50;">✓ Otorisasi Berhasil!</h2>
+                                            <p>Anda dapat menutup jendela browser ini dan kembali ke terminal.</p>
+                                        </div>
+                                    </body>
+                                </html>
+                            `);
+                            resolve(code);
+                        } else {
+                            reject(new Error('Tidak ada kode otorisasi yang diterima'));
+                        }
+                    }
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        });
 
-        const code = await question(`\n${colors.yellow}Masukkan kode dari halaman otorisasi di sini: ${colors.reset}`);
+        // Mulai server dan buka browser
+        server.listen(port);
+        await open(authUrl);
+        
+        // Tunggu kode otorisasi
+        const code = await codePromise;
+        server.close();
         
         const { tokens } = await oAuth2Client.getToken(code);
         

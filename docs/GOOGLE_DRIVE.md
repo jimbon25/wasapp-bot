@@ -68,10 +68,10 @@ Setelah file `credentials.json` ditempatkan, proses otorisasi dan konfigurasi me
         - Masukkan ID folder Google Drive default tempat file akan diunggah. Untuk mendapatkan ID ini, buka folder di Google Drive, dan salin bagian akhir dari URL (contoh: `https://drive.google.com/drive/folders/INI_ADALAH_ID_FOLDER`).
     - **Otorisasi Akun:**
         - Setelah akun ditambahkan, pilih akun tersebut dari menu.
-        - Salin **URL otorisasi** yang muncul di terminal dan buka di browser.
+        - Browser akan terbuka secara otomatis dengan halaman otorisasi Google.
         - Login dengan akun Google yang benar dan izinkan akses.
-        - Salin **kode otorisasi** yang Anda dapatkan dari browser.
-        - Tempel kode tersebut kembali ke terminal dan tekan Enter.
+        - Setelah memberikan izin, halaman sukses akan muncul dan token akan tersimpan secara otomatis.
+        - Kembali ke terminal untuk melanjutkan proses.
 
 3.  **Selesai:**
     -   Skrip akan menyimpan token dan menyelesaikan proses. Fitur Google Drive sekarang siap digunakan.

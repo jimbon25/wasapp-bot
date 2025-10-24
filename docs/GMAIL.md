@@ -4,18 +4,56 @@ Dokumen ini menjelaskan cara mengkonfigurasi dan menggunakan fitur notifikasi em
 
 ## Daftar Isi
 1.  [Konsep Utama: Push Notifications](#1-konsep-utama-push-notifications)
-2.  [Langkah 1: Konfigurasi Google Cloud Console (Gmail API & Pub/Sub)](#2-langkah-1-konfigurasi-google-cloud-console-gmail-api--pubsub)
-3.  [Langkah 2: Konfigurasi Environment Bot (.env)](#3-langkah-2-konfigurasi-environment-bot-env)
-4.  [Langkah 3: Otorisasi Setiap Akun & Registrasi Push](#4-langkah-3-otorisasi-setiap-akun--registrasi-push)
-5.  [Kontrol Dinamis (Perintah Admin)](#5-kontrol-dinamis-perintah-admin)
-6.  [Alur Kerja Teknis](#6-alur-kerja-teknis)
-7.  [Troubleshooting](#7-troubleshooting)
+2.  [Fitur Auto-Download Lampiran](#2-fitur-auto-download-lampiran)
+3.  [Langkah 1: Konfigurasi Google Cloud Console (Gmail API & Pub/Sub)](#3-langkah-1-konfigurasi-google-cloud-console-gmail-api--pubsub)
+4.  [Langkah 2: Konfigurasi Environment Bot (.env)](#4-langkah-2-konfigurasi-environment-bot-env)
+5.  [Langkah 3: Otorisasi Setiap Akun & Registrasi Push](#5-langkah-3-otorisasi-setiap-akun--registrasi-push)
+6.  [Kontrol Dinamis (Perintah Admin)](#6-kontrol-dinamis-perintah-admin)
+7.  [Alur Kerja Teknis](#7-alur-kerja-teknis)
+8.  [Troubleshooting](#8-troubleshooting)
 
 ---
 
 ## 1. Konsep Utama: Push Notifications
 
 Fitur ini memungkinkan bot untuk secara otomatis memeriksa **beberapa akun Gmail** untuk email yang belum dibaca. Berbeda dengan metode *polling* (memeriksa secara berkala), bot kini menggunakan **Google Cloud Pub/Sub** untuk menerima *push notifications* secara real-time dari Gmail.
+
+## 2. Fitur Auto-Download Lampiran
+
+Bot kini dilengkapi dengan kemampuan untuk secara otomatis mengunduh dan mengirim lampiran email:
+
+**Fitur Utama:**
+- Pengunduhan dan pengiriman lampiran otomatis saat email masuk
+- Batasan ukuran file 10MB untuk keamanan
+- Notifikasi status untuk setiap lampiran yang diproses
+- Mendukung berbagai jenis file
+
+**Format Notifikasi:**
+```
+*GMAIL NOTIFICATION*
+━━━━━━━━━━━━━
+
+*Akun:* _[Nama Akun]_
+*Waktu:* [Timestamp]
+*Dari:* [Pengirim]
+
+*Subjek:* [Subjek Email]
+
+*Pesan:* [Preview Isi Email]
+
+*Lampiran:*
+1. file1.pdf (xxx KB)
+2. file2.jpg (xxx KB)
+
+Sedang mengunduh lampiran secara otomatis...
+
+*Lihat Pesan:* [URL Email]
+```
+
+**Status Lampiran:**
+- ✓ File berhasil dikirim
+- ⚠️ File terlalu besar (>10MB)
+- ❌ Gagal mengunduh/mengirim file
 
 Ketika email baru ditemukan di salah satu akun, Google akan mengirimkan notifikasi ke Pub/Sub, yang kemudian akan diterima oleh bot. Bot akan mengirimkan notifikasi yang berisi informasi dasar (pengirim, subjek, cuplikan) ke nomor WhatsApp yang telah ditentukan **khusus untuk akun tersebut**.
 
@@ -172,11 +210,11 @@ Manajemen dan otorisasi akun Gmail kini dilakukan melalui skrip interaktif yang 
 
 4.  **Mengotorisasi Akun:**
     *   Dari menu utama, pilih nomor akun yang ingin Anda otorisasi (misalnya, `2` untuk `Kantor`).
-    *   Salin **URL otorisasi** yang muncul di terminal dan buka di browser.
+    *   Browser akan terbuka secara otomatis dengan halaman otorisasi Google.
     *   Login dengan akun Google yang sesuai.
     *   Izinkan akses yang diminta oleh aplikasi.
-    *   Salin **kode otorisasi** yang ditampilkan di halaman browser.
-    *   Tempel kode tersebut kembali ke terminal dan tekan Enter.
+    *   Setelah memberikan izin, browser akan menampilkan halaman sukses dan token akan tersimpan secara otomatis.
+    *   Kembali ke terminal untuk melanjutkan proses.
 
 5.  **Proses Selesai:**
     *   Skrip akan membuat file token (misal: `token-gmail-kantor.json`) di `src/data/credentials/`.
@@ -212,8 +250,8 @@ Anda dapat mengelola seluruh fitur Gmail secara dinamis melalui perintah WhatsAp
     Mengirim email dari akun yang sedang aktif.
     *Contoh:* `/gmail send teman@email.com "Jadwal Rapat" Jangan lupa rapat jam 2 siang ya.`
 
--   `/gmail download [nomor]` (hanya dengan me-reply notifikasi)
-    Mengunduh lampiran dari email yang notifikasinya Anda balas. Jika email memiliki lebih dari satu lampiran, sertakan nomor lampiran yang ingin diunduh.
+-   [DEPRECATED] `/gmail download [nomor]` (tidak diperlukan lagi)
+    Fitur ini sudah tidak diperlukan karena sekarang lampiran akan otomatis diunduh dan dikirim saat email masuk. Batasan ukuran file adalah 10MB.
 
 Status on/off ini akan tersimpan, bahkan jika bot di-restart. Status default saat pertama kali dijalankan akan mengikuti nilai `GMAIL_ENABLED` di file `.env` Anda.
 
@@ -233,8 +271,12 @@ Status on/off ini akan tersimpan, bahkan jika bot di-restart. Status default saa
     b. Jika sudah, email akan diabaikan.
     c. Jika belum, bot akan mengambil detail pengirim, subjek, dan cuplikan.
 9.  Mengirim notifikasi ke semua nomor di `TARGET_NUMBERS` yang **spesifik untuk akun tersebut**.
-10. Setelah mengirim notifikasi, bot akan **menyimpan ID email tersebut ke Redis** untuk mencegah notifikasi ganda di masa depan.
-11. Terakhir, bot akan menambahkan label "stempel" (misal: `NotifBot-Pribadi`). Jika `GMAIL_LEAVE_AS_UNREAD` tidak diatur ke `true`, bot juga akan **menandai email sebagai sudah dibaca**.
+10. Jika email memiliki lampiran:
+    a. Bot akan mengecek ukuran setiap lampiran
+    b. Untuk lampiran yang ukurannya di bawah 10MB, bot akan mengunduh dan mengirimkannya secara otomatis
+    c. Untuk lampiran yang lebih besar dari 10MB, bot akan mengirim peringatan
+11. Setelah mengirim notifikasi dan lampiran, bot akan **menyimpan ID email tersebut ke Redis** untuk mencegah notifikasi ganda di masa depan.
+12. Terakhir, bot akan menambahkan label "stempel" (misal: `NotifBot-Pribadi`). Jika `GMAIL_LEAVE_AS_UNREAD` tidak diatur ke `true`, bot juga akan **menandai email sebagai sudah dibaca**.
 
 ---
 

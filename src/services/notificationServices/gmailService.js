@@ -1,6 +1,8 @@
 import { google } from 'googleapis';
 import fs from 'fs/promises';
 import { PubSub } from '@google-cloud/pubsub';
+import pkg from 'whatsapp-web.js';
+const { MessageMedia } = pkg;
 import config from '../../config.js';
 import logger from '../../utils/common/logger.js';
 import { redisManager } from '../../utils/redis/index.js';
@@ -339,7 +341,7 @@ class GmailService {
                     const fileSize = (att.size / 1024).toFixed(2);
                     notifMessage += `${index + 1}. ${att.filename} (${fileSize} KB)\n`;
                 });
-                notifMessage += `\nBalas pesan ini dengan \`/gmail download [nomor]\` untuk mengunduh lampiran.\n`;
+                notifMessage += `\nSedang mengunduh lampiran secara otomatis...\n`;
             }
 
             notifMessage += `\n*Lihat Pesan:* ${details.messageUrl}\n\n`;
@@ -351,18 +353,36 @@ class GmailService {
                         logger.info(`Sent Gmail notification from \"${clientData.name}\" to ${targetNumber}`);
 
                         if (details.attachments.length > 0) {
-                            const context = {
-                                accountName: clientData.name,
-                                gmailMessageId: messageId,
-                                attachments: details.attachments.map((att, index) => ({
-                                    index: index + 1,
-                                    id: att.id,
-                                    filename: att.filename,
-                                    mimetype: att.mimetype
-                                }))
-                            };
-                            const contextKey = `gmail_notif:${sentMsg.id._serialized}`;
-                            await redisClient.set(contextKey, JSON.stringify(context), 'EX', 86400);
+                            for (const attachment of details.attachments) {
+                                try {
+                                    if (attachment.size > 10 * 1024 * 1024) {
+                                        await whatsappClient.sendMessage(targetNumber, 
+                                            `⚠️ Lampiran "${attachment.filename}" terlalu besar (${(attachment.size/1024/1024).toFixed(2)}MB)`);
+                                        continue;
+                                    }
+
+                                    const attachmentData = await this.downloadAttachment(
+                                        clientData.name,
+                                        messageId,
+                                        attachment.id
+                                    );
+
+                                    const media = new MessageMedia(
+                                        attachment.mimetype,
+                                        attachmentData.data,
+                                        attachment.filename
+                                    );
+                                    await whatsappClient.sendMessage(targetNumber, media, { 
+                                        sendMediaAsDocument: true 
+                                    });
+
+                                    logger.info(`Successfully sent attachment ${attachment.filename} to ${targetNumber}`);
+                                } catch (error) {
+                                    logger.error(`Failed to send attachment ${attachment.filename}:`, error);
+                                    await whatsappClient.sendMessage(targetNumber,
+                                        `❌ Gagal mengunduh lampiran "${attachment.filename}"`);
+                                }
+                            }
                         }
 
                     } catch (error) {
@@ -391,8 +411,8 @@ class GmailService {
 
             const payload = response.data.payload;
             const headers = payload.headers;
-            const fromHeader = headers.find(h => h.name === 'From').value;
-            const subjectHeader = headers.find(h => h.name === 'Subject').value;
+            const fromHeader = headers.find(h => h.name.toLowerCase() === 'from')?.value;
+            const subjectHeader = headers.find(h => h.name.toLowerCase() === 'subject')?.value;
 
             const attachments = [];
             if (payload.parts) {
