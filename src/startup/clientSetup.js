@@ -8,6 +8,7 @@ import proactiveAiHandler from '../handlers/proactiveAiHandler.js';
 import { CHAT_MODES } from '../utils/common/prompts.js';
 import * as uploadBatchManager from '../utils/systemService/uploadBatchManager.js';
 import gmailService from '../services/notificationServices/gmailService.js';
+import { startHealthCheckScheduler } from '../utils/systemService/healthCheckScheduler.js';
 
 
 
@@ -26,8 +27,8 @@ export async function setupClient(client, securityManager, commandHandler, aiHan
 
     client.on('ready', async () => {
         logger.info('WhatsApp bot is ready and online!');
-        // Initialize the multi-account Gmail service
         await gmailService.initialize(client);
+        startHealthCheckScheduler();
     });
 
     client.on('auth_failure', (error) => {
