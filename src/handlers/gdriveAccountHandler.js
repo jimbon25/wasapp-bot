@@ -57,7 +57,7 @@ export async function handleGDriveAccountSetup(msg, client, args) {
 
         await msg.reply(
             `*Setup Google Drive: ${validatedName}*\n\n` +
-            'Balas pesan ini dengan ID folder default untuk upload.\n' +
+            'Kirim ID folder default untuk upload.\n' +
             'ID folder dapat dilihat dari URL Google Drive:\n' +
             'https://drive.google.com/drive/folders/<folder_id>'
         );
@@ -88,17 +88,19 @@ export async function handleGDriveAccountSetup(msg, client, args) {
         const oauth2Client = await getOAuth2Client();
         const authUrl = generateAuthUrl(oauth2Client);
 
-        await msg.reply(
-            '*Otorisasi Akun Google Drive*\n\n' +
-            'Untuk menghubungkan akun Google Drive Anda:\n\n' +
-            '1. Buka link berikut di browser:\n' +
+        const authMessage = 
+            '*Otorisasi Google Drive*\n\n' +
+            'Buka link berikut:\n' +
             `${authUrl}\n\n` +
-            '2. Pilih akun Google yang ingin dihubungkan\n' +
-            '3. Berikan izin yang diminta\n' +
+            'Langkah-langkah:\n' +
+            '1. Pilih akun Google\n' +
+            '2. Klik "Lanjutkan"\n' +
+            '3. Klik "Izinkan"\n' +
             '4. Salin kode yang muncul\n' +
-            '5. Balas pesan ini dengan kode tersebut\n\n' +
-            'Menunggu kode...'
-        );
+            '5. Kirim di sini\n\n' +
+            'Menunggu kode...';
+
+        await msg.reply(authMessage);
 
         const codeCollector = new MessageCollector(
             client,
@@ -116,6 +118,11 @@ export async function handleGDriveAccountSetup(msg, client, args) {
         }
 
         const code = codeCollected[0].body.trim();
+        
+        if (code.startsWith('/') || code.length < 10) {
+            await msg.reply('❌ Kode yang Anda masukkan tidak valid. Pastikan Anda menyalin kode dari halaman persetujuan Google.');
+            return;
+        }
 
         const tokens = await withRetry(async () => {
             return await exchangeCode(oauth2Client, code);

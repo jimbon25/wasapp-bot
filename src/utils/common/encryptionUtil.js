@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import logger from './logger.js'; // Assuming logger is available in common utils
+import logger from './logger.js';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;

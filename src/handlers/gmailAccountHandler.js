@@ -65,7 +65,7 @@ export async function handleGmailAccountSetup(msg, client, args) {
     try {
         if (!args || args.length === 0) {
             await msg.reply(
-                '*🔧 Setup Akun Gmail*\n\n' +
+                '*Setup Akun Gmail*\n\n' +
                 'Untuk menambahkan akun baru, gunakan format:\n' +
                 '`/gmail add-account [nama_akun]`\n\n' +
                 'Contoh:\n' +
@@ -97,7 +97,7 @@ export async function handleGmailAccountSetup(msg, client, args) {
 
         await msg.reply(
             `*Setup Akun Gmail: ${validatedName}*\n\n` +
-            'Balas pesan ini dengan nomor WhatsApp target untuk notifikasi.\n' +
+            'Berikan nomor WhatsApp target untuk notifikasi.\n' +
             'Jika lebih dari satu nomor, pisahkan dengan koma.\n\n' +
             'Contoh:\n' +
             '`0812xxxx, 0857xxxx`');
@@ -148,18 +148,21 @@ export async function handleGmailAccountSetup(msg, client, args) {
 
         const authUrl = oAuth2Client.generateAuthUrl({
             access_type: 'offline',
-            scope: ['https://www.googleapis.com/auth/gmail.modify']
+            scope: ['https://www.googleapis.com/auth/gmail.modify'],
+            response_type: 'code'
         });
 
         await msg.reply(
-            '*Proses Otorisasi Gmail*\n\n' +
-            '1. Buka URL berikut di browser Anda:\n' +
-            '`' + authUrl + '`\n\n' +
-            '2. Login ke akun Gmail yang ingin Anda hubungkan\n' +
-            '3. Berikan izin untuk aplikasi\n' +
-            '4. Anda akan melihat kode otorisasi\n' +
-            '5. *Salin kode tersebut dan kirim ke sini*\n\n' +
-            '_Waktu timeout 5 menit_');
+            '*Otorisasi Gmail*\n\n' +
+            'Buka link berikut:\n' +
+            `${authUrl}\n\n` +
+            'Langkah-langkah:\n' +
+            '1. Pilih akun Gmail\n' +
+            '2. Klik "Lanjutkan"\n' +
+            '3. Klik "Izinkan"\n' +
+            '4. Salin kode yang muncul\n' +
+            '5. Kirim di sini\n\n' +
+            'Menunggu kode...');
 
         const authCollector = new MessageCollector(
             client,

@@ -7,10 +7,7 @@ import logger from '../common/logger.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CREDENTIALS_PATH = path.join(__dirname, '..', '..', 'data', 'credentials', 'credentials.json');
 
-const SCOPES = [
-    'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/drive.metadata.readonly'
-];
+const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
 export async function getOAuth2Client() {
     try {
@@ -30,10 +27,11 @@ export async function getOAuth2Client() {
 }
 
 export function generateAuthUrl(oauth2Client) {
+    const minimalScope = ['https://www.googleapis.com/auth/drive.file'];
     return oauth2Client.generateAuthUrl({
         access_type: 'offline',
-        scope: SCOPES,
-        prompt: 'consent'
+        scope: minimalScope,
+        response_type: 'code'
     });
 }
 
