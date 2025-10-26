@@ -60,6 +60,12 @@ export default {
                 await message.react('✘');
                 if (error.message.includes('rate limit')) {
                     await message.reply('⚠️ Google Drive API rate limit terlampaui. Mohon coba lagi nanti.');
+                } else if (error.message.includes('Access denied')) {
+                    await message.reply('⚠️ Gagal mengakses Google Drive. Mohon hubungi admin untuk pengecekan credentials.');
+                } else if (error.message.includes('File size exceeds')) {
+                    await message.reply('⚠️ Ukuran file terlalu besar. Mohon kirim file yang lebih kecil.');
+                } else if (error.code === 'ENOENT') {
+                    await message.reply('✘ Gagal mengupload: File tidak ditemukan di server sementara.');
                 } else {
                     await message.reply('✘ Terjadi kesalahan saat mengupload file. Mohon coba lagi.');
                     logger.error('Error uploading media in session:', error);

@@ -1,12 +1,13 @@
 import { redisManager } from '../../utils/redis/RedisManager.js';
 import logger from '../../utils/common/logger.js';
+import config from '../../config.js';
 import activeDriveAccountManager from '../../utils/gdrive/activeDriveAccountManager.js';
 
 class UploadSessionService {
     constructor() {
         this.redis = redisManager;
         this.sessionPrefix = 'gdrive_session:';
-        this.sessionTimeout = 5 * 60;
+        this.sessionTimeout = config.apis.googleDrive.sessionTimeout;
     }
 
     async getSessionKey(userId) {

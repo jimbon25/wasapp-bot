@@ -8,6 +8,7 @@ import config from '../../config.js';
 import { FileManager } from '../../utils/fileManagement/fileManager.js';
 import activeDriveAccountManager from '../../utils/gdrive/activeDriveAccountManager.js';
 import EncryptionUtil from '../../utils/common/encryptionUtil.js';
+import { driveFolderValidator } from './driveFolderValidator.js';
 
 class GoogleDriveService {
     constructor() {
@@ -109,6 +110,11 @@ class GoogleDriveService {
         try {
             const { client: drive, config: activeConfig } = await this._getDriveClient();
             const finalParentFolderId = parentFolderId || activeConfig.defaultFolderId;
+
+            const folderExists = await driveFolderValidator.isFolderExists(finalParentFolderId);
+            if (!folderExists) {
+                throw new Error(`Target Google Drive folder (ID: ${finalParentFolderId}) not found or has been deleted.`);
+            }
 
             const stats = await fsPromises.stat(filePath);
             if (stats.size > activeConfig.maxFileSize * 1024 * 1024) {

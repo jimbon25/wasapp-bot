@@ -93,7 +93,7 @@ async function addNewAccount() {
     const sanitizedName = name.toLowerCase().replace(/\s+/g, '-');
     const newAccount = {
         accountName: name,
-        credentialsPath: 'src/data/credentials/credentials.json',
+        credentialsPath: path.join(CREDENTIALS_DIR, 'credentials.json'),
         tokenPath: `src/data/credentials/token-drive-${sanitizedName}.json`,
         defaultFolderId: folderId.trim()
     };
@@ -198,7 +198,7 @@ async function selectAccount(accounts) {
 
 async function authorizeAccount(account) {
     printHeader(`Otorisasi Akun: ${account.accountName}`);
-    const credentialsPath = path.join(process.cwd(), account.credentialsPath);
+    const credentialsPath = account.credentialsPath;
 
     try {
         await fs.access(credentialsPath);

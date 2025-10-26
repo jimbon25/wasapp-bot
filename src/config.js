@@ -15,6 +15,9 @@ const config = {
   sessionDir: process.env.WABOT_SESSION_DIR || './sessions',
 
   apis: {
+    googleDrive: {
+      sessionTimeout: parseInt(process.env.GDRIVE_SESSION_TIMEOUT_SECONDS, 10) || 300 // 5 minutes default
+    },
     googleDriveAccounts: (() => {
       const defaultConfig = {
         maxFileSize: parseInt(process.env.GOOGLE_DRIVE_MAX_FILE_SIZE, 10) || 100,
@@ -53,6 +56,7 @@ const config = {
       credentialsBaseDir: process.env.GMAIL_CREDENTIALS_BASE_DIR || join(__dirname, './data/credentials'),
       credentialsDir: process.env.GMAIL_CREDENTIALS_DIR || join(__dirname, './data/credentials/gmailCredentials'),
       sharedCredentialsPath: process.env.GMAIL_SHARED_CREDENTIALS_PATH || join(__dirname, './data/credentials/gmailCredentials/credentials-gmail-all.json'),
+      accountsPath: join(__dirname, './data/credentials/gmailCredentials/gmail_accounts.json'),
       pubsubKeyPath: process.env.GOOGLE_APPLICATION_CREDENTIALS || join(__dirname, './data/credentials/gmailCredentials/wabot-pubsub-key.json'),
       accounts: (() => {
         try {

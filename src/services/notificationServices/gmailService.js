@@ -192,18 +192,19 @@ class GmailService {
             logger.info(`Email sent successfully from ${fromAccountName} to ${to}. Message ID: ${res.data.id}`);
             return res.data;
         } catch (error) {
-            logger.error(`Failed to send email from ${fromAccountName}:`, error);
-            throw new Error('Gagal mengirim email via Gmail API.');
+            logger.error(`Failed to send email from ${fromAccountName}:`, error.response ? error.response.data : error.message);
+            if (error.code === 400) {
+                throw new Error('Gagal mengirim email. Alamat email penerima kemungkinan tidak valid.');
+            }
+            throw new Error('Gagal mengirim email via Gmail API. Cek log untuk detail.');
         }
     }
 
     async _ensureLabelExists(gmail, labelName) {
         try {
             const res = await gmail.users.labels.list({ userId: 'me' });
-            // Cek lebih teliti dengan case-insensitive
             const existingLabel = res.data.labels.find(label => 
-                label.name.toLowerCase() === labelName.toLowerCase() ||
-                label.name.replace(/\s+/g, '') === labelName.replace(/\s+/g, '')
+                label.name.toLowerCase() === labelName.toLowerCase()
             );
 
             if (existingLabel) {
@@ -211,7 +212,8 @@ class GmailService {
                 return { id: existingLabel.id, name: existingLabel.name };
             }
 
-            try {            
+            // If not found, try to create it
+            try {
                 const newLabel = await gmail.users.labels.create({
                     userId: 'me',
                     resource: {
@@ -223,18 +225,16 @@ class GmailService {
                 logger.info(`Successfully created new label '${labelName}'`);
                 return { id: newLabel.data.id, name: newLabel.data.name };
             } catch (createError) {
-                // Jika gagal membuat label baru, coba cek sekali lagi untuk menghindari race condition
-                const recheckRes = await gmail.users.labels.list({ userId: 'me' });
-                const recheckLabel = recheckRes.data.labels.find(label => 
-                    label.name.toLowerCase() === labelName.toLowerCase() ||
-                    label.name.replace(/\s+/g, '') === labelName.replace(/\s+/g, '')
-                );
-
-                if (recheckLabel) {
-                    logger.info(`Found label '${recheckLabel.name}' after creation attempt failed`);
-                    return { id: recheckLabel.id, name: recheckLabel.name };
+                // If creation fails because it already exists (race condition), re-fetch and return it.
+                if (createError.code === 409) {
+                    logger.warn(`Label creation for '${labelName}' failed with 409, likely a race condition. Re-fetching labels.`);
+                    const finalList = await gmail.users.labels.list({ userId: 'me' });
+                    const finalLabel = finalList.data.labels.find(label => label.name.toLowerCase() === labelName.toLowerCase());
+                    if (finalLabel) {
+                        return { id: finalLabel.id, name: finalLabel.name };
+                    }
                 }
-                
+                // For any other error, re-throw it.
                 throw createError;
             }
         } catch (error) {

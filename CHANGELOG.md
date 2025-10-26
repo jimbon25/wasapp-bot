@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.1.4] - 2025-10-26
+
+### Fixed
+- Memperbaiki crash saat startup yang disebabkan oleh `ReferenceError: config is not defined` di `uploadSessionService.js`.
+- Menghilangkan hardcoded path untuk file `gmail_accounts.json` dan `credentials.json` di skrip setup, sekarang menggunakan path terpusat dari `config.js`.
+- Memperkuat logika pembuatan label di `gmailService.js` untuk menangani potensi *race condition* dengan lebih baik.
+
+### Changed
+- Durasi timeout untuk sesi upload Google Drive sekarang dapat dikonfigurasi melalui variabel `.env` (`GDRIVE_SESSION_TIMEOUT_SECONDS`).
+- Pesan error saat mengirim email (Gmail) dan mengupload file (Google Drive) dibuat lebih spesifik untuk mempermudah *troubleshooting*.
+
 ## [2.1.3] - 2025-10-24
 
 ### Added

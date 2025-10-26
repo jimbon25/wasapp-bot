@@ -20,7 +20,7 @@ const colors = {
     magenta: "\x1b[35m",
 };
 
-const GMAIL_ACCOUNTS_JSON_PATH = path.join(process.cwd(), 'src', 'data', 'credentials', 'gmailCredentials', 'gmail_accounts.json');
+const GMAIL_ACCOUNTS_JSON_PATH = config.apis.gmail.accountsPath;
 
 const rl = readline.createInterface({
     input: process.stdin,

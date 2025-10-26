@@ -64,7 +64,7 @@ Bot WhatsApp multifungsi dengan fitur AI chat (Gemini), Instagram downloader, tr
 
 ### Integrasi Cloud Storage
 
-- **Google Drive**: Unggah file (foto, video, dokumen) ke Google Drive dengan `/gdrive`. Mendukung mode single & multi-upload serta manajemen folder.
+- **Google Drive**: Unggah file (foto, video, dokumen) ke Google Drive dengan `/gdrive`. Mendukung mode single & multi-upload serta manajemen folder. Durasi sesi multi-upload dapat diatur melalui variabel `.env`.
 - **Mega.nz**: Unggah file ke folder default di Mega.nz dengan `/mega`. Mendukung mode upload tunggal dan sesi multi-upload.
 
 ### Informasi & Utilitas
