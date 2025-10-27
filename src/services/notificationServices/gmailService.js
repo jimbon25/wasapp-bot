@@ -228,10 +228,17 @@ class GmailService {
                 // If creation fails because it already exists (race condition), re-fetch and return it.
                 if (createError.code === 409) {
                     logger.warn(`Label creation for '${labelName}' failed with 409, likely a race condition. Re-fetching labels.`);
-                    const finalList = await gmail.users.labels.list({ userId: 'me' });
-                    const finalLabel = finalList.data.labels.find(label => label.name.toLowerCase() === labelName.toLowerCase());
-                    if (finalLabel) {
-                        return { id: finalLabel.id, name: finalLabel.name };
+                    try {
+                        const finalList = await gmail.users.labels.list({ userId: 'me' });
+                        const finalLabel = finalList.data.labels.find(label => label.name.toLowerCase() === labelName.toLowerCase());
+                        if (finalLabel) {
+                            return { id: finalLabel.id, name: finalLabel.name };
+                        } else {
+                            throw new Error(`Failed to find label '${labelName}' after a 409 conflict.`);
+                        }
+                    } catch (refetchError) {
+                        logger.error(`Failed to re-fetch labels for '${labelName}' after a 409 conflict.`, refetchError);
+                        throw createError;
                     }
                 }
                 // For any other error, re-throw it.
@@ -322,6 +329,11 @@ class GmailService {
             await redisClient.set(historyKey, newHistoryId);
 
         } catch (error) {
+            if (error.code === 404 || (error.response && error.response.status === 404)) {
+                logger.warn(`History ID for ${clientData.name} is no longer valid. Resetting to current ID ${newHistoryId}`);
+                await redisClient.set(historyKey, newHistoryId);
+                return;
+            }
             logger.error(`Error processing history for ${clientData.name}:`, error);
         }
     }

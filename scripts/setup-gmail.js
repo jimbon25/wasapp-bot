@@ -120,7 +120,7 @@ async function addNewAccount() {
     // Menggunakan konfigurasi dari config.js
     const credentialsPath = config.apis.gmail.sharedCredentialsPath;
     const tokenPath = path.join(config.apis.gmail.credentialsDir, `token-gmail-${sanitizedName}.json`);
-    const processedLabel = `Wabot-Notif-${name.replace(/\s+/g, '')}`;
+    const processedLabel = `Notif-${name.replace(/\s+/g, '')}`;
 
     const newAccount = {
         name,

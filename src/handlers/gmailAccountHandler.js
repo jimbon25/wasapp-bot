@@ -200,7 +200,7 @@ export async function handleGmailAccountSetup(msg, client, args) {
             credentialsPath: config.apis.gmail.sharedCredentialsPath,
             tokenPath: path.join(__dirname, '..', 'data', 'credentials', 'gmailCredentials', `token-gmail-${validatedName.toLowerCase().replace(/\s+/g, '-')}.json`),
             targetNumbers,
-            processedLabel: `Wabot-Notif-${validatedName.replace(/\s+/g, '')}`
+            processedLabel: `Notif-${validatedName.replace(/\s+/g, '')}`
         };
 
         accounts.push(newAccount);
